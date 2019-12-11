@@ -36,7 +36,7 @@ var Trello = {
    * Function to return URL for getBoard
    * @param {string} boardId: Trello Board ID
    * @return {string} uUrl: unique part of url for this GET call
-  */
+   */
   getBoardUrl: function(boardId){
     var uUrl = '/boards/' + boardId;
     return uUrl;
@@ -45,7 +45,7 @@ var Trello = {
    * Retrieve details of a board
    * @param {string} boardId: Trello Board ID
    * @return {object} board: details of board
-  */
+   */
   getBoard: function(boardId) {
     var extUrl = this.getBoardUrl(boardId) + '?'  + this.pKeyToken();
     var url = this.baseUrl + extUrl;
@@ -63,7 +63,7 @@ var Trello = {
    * @param {string} boardId: Board ID of the target Trello board
    * @param {string} option: 'all', 'closed', 'none', 'open', or 'visible'
    * @return {string} uUrl: unique part of url for this GET call
-  */
+   */
   getCardsUrl: function(boardId, option){
     var uUrl = '/boards/' + boardId + '/cards/' + option;
     return uUrl;
@@ -146,6 +146,14 @@ var Trello = {
       extUrl += keyValue;
     }
     var url = this.baseUrl + '/cards' + extUrl + this.pKeyToken();
+    try {
+      var createdCard = this.post(url);
+      createdCard = JSON.parse(createdCard);
+      return createdCard;
+    } catch(e) {
+      var error = errorMessage(e);
+      return error;
+    }
   },
   /**
    * Delete card
