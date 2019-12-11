@@ -22,6 +22,10 @@ var Trello = {
     var response = UrlFetchApp.fetch(url, {'method':'GET', 'muteHttpExceptions':false});
     return response;
   },
+  post: function(url) {
+    var response = UrlFetchApp.fetch(url, {'method':'POST', 'muteHttpExceptions':false});
+    return response;
+  },
   tDelete: function(url) {
     var response = UrlFetchApp.fetch(url, {'method':'DELETE', 'muteHttpExceptions':false});
     return response;
@@ -32,7 +36,7 @@ var Trello = {
    * Function to return URL for getBoard
    * @param {string} boardId: Trello Board ID
    * @return {string} uUrl: unique part of url for this GET call
-   */
+  */
   getBoardUrl: function(boardId){
     var uUrl = '/boards/' + boardId;
     return uUrl;
@@ -41,7 +45,7 @@ var Trello = {
    * Retrieve details of a board
    * @param {string} boardId: Trello Board ID
    * @return {object} board: details of board
-   */
+  */
   getBoard: function(boardId) {
     var extUrl = this.getBoardUrl(boardId) + '?'  + this.pKeyToken();
     var url = this.baseUrl + extUrl;
@@ -59,7 +63,7 @@ var Trello = {
    * @param {string} boardId: Board ID of the target Trello board
    * @param {string} option: 'all', 'closed', 'none', 'open', or 'visible'
    * @return {string} uUrl: unique part of url for this GET call
-   */
+  */
   getCardsUrl: function(boardId, option){
     var uUrl = '/boards/' + boardId + '/cards/' + option;
     return uUrl;
@@ -128,12 +132,28 @@ var Trello = {
     }
   },
   /**
+   * Create Trello card
+   * @param {object} queryParams: object in form of {[query params1]=[parameter1],[query params2]=[parameter2], ...}
+   * @return {object} createdCard: parsed JSON object with the details of the card created
+   */
+  postCard: function(queryParams) {
+    var queryKeys = queryParams.keys();
+    var extUrl = '?';
+    for (var i = 0; i < queryKeys.length; i++) {
+      var key = queryKeys[i];
+      var value = queryParams[key];
+      var keyValue = key + '=' + value + '&';
+      extUrl += keyValue;
+    }
+    var url = this.baseUrl + '/cards' + extUrl + this.pKeyToken();
+  },
+  /**
    * Delete card
    * @param {string} cardId: Trello card ID
    * @return {object} deleted: result of DELETE
    */
   deleteCard: function(cardId) {
-    var url = this.baseUrl + 'cards/' + cardId + '?'  + this.pKeyToken();
+    var url = this.baseUrl + '/cards/' + cardId + '?'  + this.pKeyToken();
     try {
       var deleted = this.tDelete(url);
       deleted = JSON.parse(deleted);
@@ -147,7 +167,8 @@ var Trello = {
 
 /**
  * List the contents of a Trello board into a newly created Google Spreadsheet sheet
- */
+ * 
+*/
 function trelloReport(){
   // Get contents of Trello board
   var boardId = pBoardId;
@@ -232,7 +253,7 @@ function trelloReport(){
 /**
  * Bulk delete all archived cards in a designated Trello board
  * NOTE: CANNOT BE UNDONE!!!
- */
+*/
 function deleteArchivedCards() {
   var cards = Trello.getCards(pBoardId, 'closed');
   for (var i = 0; i < cards.length; i++) {
