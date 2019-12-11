@@ -33,6 +33,41 @@ var Trello = {
   
   // FUNCTIONS
   /**
+   * Function to return URL for getMyBoards
+   * @param {boolean} simple: if true, returns the partial URL for retrieving only board ID and name. Defaults to false.
+   * @return {string} uUrl: unique part of url for this GET call
+   */
+  getMyBoardsUrl: function(simple){
+    simple = simple || false;
+    var uUrl = '/members/me/boards';
+    if (simple === true) {
+      uUrl += '?fields=name';
+    }
+    return uUrl;
+  },
+  /**
+   * Retrieve details of the boards of the current user, as represented by the Trello API key and token
+   * @param {boolean} simple: if true, returns the partial URL for retrieving only board ID and name. Defaults to false.
+   * @return {object} myBoards: parsed JSON object showing details of the user's boards
+   */
+  getMyBoards: function(simple) {
+    simple = simple || false;
+    var delimiter = '?';
+    if (simple === true) {
+      delimiter = '&';
+    }
+    var extUrl = this.getMyBoardsUrl(simple) + delimiter + this.pKeyToken();
+    var url = this.baseUrl + extUrl;
+    try {
+      var myBoards = this.get(url);
+      myBoards = JSON.parse(myBoards);
+      return myBoards;
+    } catch(e) {
+      var error = errorMessage(e);
+      return error;
+    }
+  },
+  /**
    * Function to return URL for getBoard
    * @param {string} boardId: Trello Board ID
    * @return {string} uUrl: unique part of url for this GET call
@@ -134,6 +169,7 @@ var Trello = {
   /**
    * Create Trello card
    * @param {object} queryParams: object in form of {[query params1]=[parameter1],[query params2]=[parameter2], ...}
+   * See https://developers.trello.com/reference#cardsid-1 for full details of available query params.
    * @return {object} createdCard: parsed JSON object with the details of the card created
    */
   postCard: function(queryParams) {
@@ -174,9 +210,28 @@ var Trello = {
 }
 
 /**
+ * Get the IDs of the Trello boards that are available to the current user, as represented by the Trello API key and token.
+ */
+function trelloBoards(){
+  var ui = SpreadsheetApp.getUi();
+  var simple = true;
+  var myBoards = Trello.getMyBoards(simple);
+  var alertMessage = [];
+  alertMessage.push('Board ID/Name: ')
+  
+  for (var i = 0; i < myBoards.length; i++) {
+    var myBoard = myBoards[i];
+    var text = myBoard.name + ' / ' + myBoard.id;
+    alertMessage.push(text);
+  }
+  
+  alertMessage = alertMessage.join('\n');
+  ui.alert(alertMessage);
+}
+
+/**
  * List the contents of a Trello board into a newly created Google Spreadsheet sheet
- * 
-*/
+ */
 function trelloReport(){
   // Get contents of Trello board
   var boardId = pBoardId;
@@ -261,8 +316,9 @@ function trelloReport(){
 /**
  * Bulk delete all archived cards in a designated Trello board
  * NOTE: CANNOT BE UNDONE!!!
-*/
+ */
 function deleteArchivedCards() {
+  var ui = SpreadsheetApp.getUi();
   var cards = Trello.getCards(pBoardId, 'closed');
   for (var i = 0; i < cards.length; i++) {
     var card = cards[i];
@@ -271,4 +327,3 @@ function deleteArchivedCards() {
     Logger.log(deleted);
   }
 }
-
