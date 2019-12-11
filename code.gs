@@ -2,10 +2,10 @@
 // File > Properties > Script Properties
 // 参考：スクリプトエディタの「ファイル」＞「プロジェクトのプロパティ」＞タブ「スクリプトのプロパティ」
 var scriptProperties = PropertiesService.getScriptProperties();
-var pUserName = scriptProperties.getProperty('userName'); // currently set to 'aiupr1'
+var pUserName = scriptProperties.getProperty('userName');
 var pTrelloKey = scriptProperties.getProperty('trelloKey'); // Trello API Key
 var pTrelloToken = scriptProperties.getProperty('trelloToken'); // Trello API Token
-var pBoardId = scriptProperties.getProperty('boardId'); // currently set to the ID of board 'AIUウェブサイト追加コンテンツ制作（2019年度）'
+var pBoardId = scriptProperties.getProperty('boardId');
 
 // Setting class 'Trello'
 // See official document at https://developers.trello.com/reference#introduction
