@@ -22,6 +22,10 @@ var Trello = {
     var response = UrlFetchApp.fetch(url, {'method':'GET', 'muteHttpExceptions':false});
     return response;
   },
+  post: function(url) {
+    var response = UrlFetchApp.fetch(url, {'method':'POST', 'muteHttpExceptions':false});
+    return response;
+  },
   tDelete: function(url) {
     var response = UrlFetchApp.fetch(url, {'method':'DELETE', 'muteHttpExceptions':false});
     return response;
@@ -128,12 +132,36 @@ var Trello = {
     }
   },
   /**
+   * Create Trello card
+   * @param {object} queryParams: object in form of {[query params1]=[parameter1],[query params2]=[parameter2], ...}
+   * @return {object} createdCard: parsed JSON object with the details of the card created
+   */
+  postCard: function(queryParams) {
+    var queryKeys = queryParams.keys();
+    var extUrl = '?';
+    for (var i = 0; i < queryKeys.length; i++) {
+      var key = queryKeys[i];
+      var value = queryParams[key];
+      var keyValue = key + '=' + value + '&';
+      extUrl += keyValue;
+    }
+    var url = this.baseUrl + '/cards' + extUrl + this.pKeyToken();
+    try {
+      var createdCard = this.post(url);
+      createdCard = JSON.parse(createdCard);
+      return createdCard;
+    } catch(e) {
+      var error = errorMessage(e);
+      return error;
+    }
+  },
+  /**
    * Delete card
    * @param {string} cardId: Trello card ID
    * @return {object} deleted: result of DELETE
    */
   deleteCard: function(cardId) {
-    var url = this.baseUrl + 'cards/' + cardId + '?'  + this.pKeyToken();
+    var url = this.baseUrl + '/cards/' + cardId + '?'  + this.pKeyToken();
     try {
       var deleted = this.tDelete(url);
       deleted = JSON.parse(deleted);
@@ -147,7 +175,8 @@ var Trello = {
 
 /**
  * List the contents of a Trello board into a newly created Google Spreadsheet sheet
- */
+ * 
+*/
 function trelloReport(){
   // Get contents of Trello board
   var boardId = pBoardId;
@@ -232,7 +261,7 @@ function trelloReport(){
 /**
  * Bulk delete all archived cards in a designated Trello board
  * NOTE: CANNOT BE UNDONE!!!
- */
+*/
 function deleteArchivedCards() {
   var cards = Trello.getCards(pBoardId, 'closed');
   for (var i = 0; i < cards.length; i++) {
