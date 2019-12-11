@@ -1,9 +1,11 @@
 // Add to menu when spreadsheet is opened
-function onOpen() {
-  var spreadsheet = SpreadsheetApp.getActive();
-  var menuItems = [];
-  menuItems.push({name: 'Get Board Content', functionName: 'trelloReport'});
-  spreadsheet.addMenu('Trello', menuItems);
+function onOpen(e) {
+  SpreadsheetApp.getUi()
+  .createMenu('Trello')
+  .addItem('Get Board Content', 'trelloReport')
+  .addSeparator()
+  .addItem('Delete Archived Cards', 'deleteArchivedCards')
+  .addToUi();
 }
 
 /**
