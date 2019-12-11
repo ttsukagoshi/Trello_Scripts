@@ -2,9 +2,10 @@
 function onOpen(e) {
   SpreadsheetApp.getUi()
   .createMenu('Trello')
+  .addItem('Get My Board', 'trelloBoards')
   .addItem('Get Board Content', 'trelloReport')
-  .addSeparator()
-  .addItem('Delete Archived Cards', 'deleteArchivedCards')
+  //.addSeparator()
+  //.addItem('Delete Archived Cards', 'deleteArchivedCards')
   .addToUi();
 }
 
