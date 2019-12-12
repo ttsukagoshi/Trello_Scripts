@@ -4,6 +4,8 @@ function onOpen(e) {
   .createMenu('Trello')
   .addItem('Get My Board', 'trelloBoards')
   .addItem('Get Board Content', 'trelloReport')
+  .addSeparator()
+  .addItem('Key & Token', 'showKeyToken')
   //.addSeparator()
   //.addItem('Delete Archived Cards', 'deleteArchivedCards')
   .addToUi();

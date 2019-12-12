@@ -327,3 +327,11 @@ function deleteArchivedCards() {
   }
 }
 
+/**
+ * Show Trello Key & Token on alert window. Useful for making test requests on Trello Developers website
+ */
+function showKeyToken(){
+  var ui = SpreadsheetApp.getUi();
+  var alertMessage = 'Key: ' + pTrelloKey + '\nToken: ' + pTrelloToken + '\nHandle with care!!!';
+  ui.alert(alertMessage);
+}
