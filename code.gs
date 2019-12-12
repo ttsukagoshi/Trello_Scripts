@@ -301,15 +301,14 @@ function trelloReport(){
   }
  
   // Create a new sheet in this Google Spreadsheet
-  var now = Utilities.formatDate(new Date(), 'JST', 'yyyyMMddHHmmss');
+  var now = Utilities.formatDate(new Date(), timeZone, 'yyyyMMddHHmmss');
   var sheetName = 'TrelloReport' + now;
   
   var reportSS = SpreadsheetApp.getActiveSpreadsheet();
   var reportSheet = reportSS.insertSheet(sheetName, 0); // Insert new sheet at the left-most position (<- sheetIndex = 0)
-  var headerRange = reportSheet.getRange(1,1,1,header[0].length);
-  var headerData = headerRange.setValues(header);
-  var reportRange = reportSheet.getRange(2,1,data.length,header[0].length);
-  var reportData = reportRange.setValues(data);
+  var sheetTitle = reportSheet.getRange(1,1).setValue('Trello Board Name: ' + boardName);
+  var sheetHeader = reportSheet.getRange(3,1,1,header[0].length).setValues(header);
+  var reportData = reportSheet.getRange(4,1,data.length,header[0].length).setValues(data);
 }
 
 
@@ -327,3 +326,4 @@ function deleteArchivedCards() {
     Logger.log(deleted);
   }
 }
+
