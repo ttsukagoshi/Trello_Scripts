@@ -22,14 +22,14 @@ If you're not sure where to find the API keys and tokens for Trello, see [API Ke
 ## Functions
 - trelloBoards (Menu Name: *Get My Board*): Returns the list of the names and IDs of all Trello boards available to your account as a pop-up alert. Useful for getting board IDs for other functions.
 - trelloReport (Menu Name: *Get Board Content*): Creates a new sheet on the spreadsheet and list all cards in a Trello board, including archived ones, on it. Designate board by board ID.
-- deleteArchivedCards (Menu Name: *deleteArchivedCards*): Delete archived cards in a Trello board. Designate board by board ID. **USE WITH CARE; CANNOT BE UNDONE!!**
+- deleteArchivedCards (Menu Name: *Delete Archived Cards*): Delete archived cards in a Trello board. Designate board by board ID. **USE WITH CARE; CANNOT BE UNDONE!!**
 
 ## References
 - [Trello Developers](https://developers.trello.com/): Official documentation for Trello API
 
 ---
-GASとGoogleスプレッドシートを使ってTrelloを管理する
-現在のところ、主にGETの用途を想定。
+GASとGoogleスプレッドシートを使ってTrelloを管理する。  
+スプレッドシートにコンテナバインドされたスクリプトとして使用。
 
 ## 内容
 - code.gs: 主要なコードが書かれたファイル
@@ -49,7 +49,7 @@ TrelloのAPI keyやトークンについての説明は公式ドキュメント�
 ## 関数
 - trelloBoards (メニュー名: *Get My Board*): 自分のアカウントからアクセス可能な全てのTrelloボードの名前とIDを、ポップアップメッセージとして表示。他の関数を実行する際に便利。
 - trelloReport (メニュー名: *Get Board Content*): 新しいシートを作り、そこに指定したTrelloボード内の全てのカードをリスト化する。アーカイブされたカードも含まれる。対象はボードIDで指定。
-- deleteArchivedCards (メニュー名: *deleteArchivedCards*): 指定したTrelloボード内の、アーカイブされたカードを削除する。対象はボードIDで指定。**元に戻せないので、実行は要注意！！！**
+- deleteArchivedCards (メニュー名: *Delete Archived Cards*): 指定したTrelloボード内の、アーカイブされたカードを削除する。対象はボードIDで指定。**元に戻せないので、実行は要注意！！！**
 
 ## 参考資料
 - [Trello Developers](https://developers.trello.com/): Trello APIの公式ガイド
