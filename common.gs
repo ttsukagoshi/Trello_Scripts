@@ -12,7 +12,8 @@ function onOpen(e) {
 }
 
 // Global params
-var timeZone = Session.getScriptTimeZone();
+var timeZone = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+var userLocale = Session.getActiveUserLocale();
 
 /**
  * Standarized Date Format for this project.
