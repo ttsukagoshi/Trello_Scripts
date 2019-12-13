@@ -1,19 +1,19 @@
+// Global params
+var timeZone = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+var userLocale = Session.getActiveUserLocale();
+
 // Add to menu when spreadsheet is opened
 function onOpen(e) {
   SpreadsheetApp.getUi()
   .createMenu('Trello')
-  .addItem('Get My Board', 'trelloBoards')
   .addItem('Get Board Content', 'trelloReport')
   .addSeparator()
   .addItem('Key & Token', 'showKeyToken')
-  //.addSeparator()
-  //.addItem('Delete Archived Cards', 'deleteArchivedCards')
+  .addItem('Get My Board', 'trelloBoards')
+  .addSeparator()
+  .addItem('Delete Archived Cards', 'deleteArchivedCards')
   .addToUi();
 }
-
-// Global params
-var timeZone = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
-var userLocale = Session.getActiveUserLocale();
 
 /**
  * Standarized Date Format for this project.
