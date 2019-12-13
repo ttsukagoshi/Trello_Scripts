@@ -317,18 +317,66 @@ function trelloReport(){
  * NOTE: CANNOT BE UNDONE!!!
  */
 function deleteArchivedCards() {
+  // set counters to avoid hitting Trello API rate limits
+  /* Reference: https://developers.trello.com/docs/rate-limits
+   * To help prevent strain on Trello’s servers, our API imposes rate limits per API key for all issued tokens. There is a limit of
+   * 300 requests per 10 seconds for each API key and 
+   * 100 requests per 10 seconds interval for each token.
+  */
+  var rateLimit = 100;
+  var interval = 10 * 1000 // in milliseconds
+  var counter = 0;
+  
+  // Log of all deleted cards
+  var logDeleted = [];
+  
+  // Getting target board and card information
+  var boardId = pBoardId;
+  var getBoardUrl = Trello.getBoardUrl(boardId);
+  var getCardsUrl = Trello.getCardsUrl(boardId,'closed');
+  var urls = [getBoardUrl, getCardsUrl];
+  var responses = Trello.batchGet(urls);
+  var board = responses[0]['200']; // HTTP Response header 200 for valid request
+  var cards = responses[1]['200']; // HTTP Response header 200 for valid request
+  
+  var boardName = board.name;
+  
+  // Prompt Message
   var ui = SpreadsheetApp.getUi();
-  var cards = Trello.getCards(pBoardId, 'closed');
-  for (var i = 0; i < cards.length; i++) {
-    var card = cards[i];
-    var cardId = card.id;
-    var deleted = Trello.deleteCard(cardId);
-    Logger.log(deleted);
+  var promptMessage = 'You are about to delete all archived cards in Trello board \"' + boardName + '\." This action CANNOT BE UNDONE. To continue, enter name of target board for confirmation:';
+  if (userLocale === 'ja') {
+    promptMessage = 'Trelloボード名「' + boardName + '」内でアーカイブされた全てのカードを削除しようとしています。この操作は元に戻せません。\n続けるには、確認のために対象ボード名を入力してください。';
+  }
+  
+  try {
+    var promptConfirmation = ui.prompt('Confirm Delete / 確認', promptMessage, ui.ButtonSet.OK_CANCEL);
+    if (promptConfirmation.getSelectedButton() !== ui.Button.OK) {
+      throw new Error('Action Canceled / 削除がキャンセルされました');
+    } else if (promptConfirmation.getResponseText() !== boardName) {
+      throw new Error('Board name does not match / ボード名が一致しません');
+    }
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      var cardId = card.id;
+      var cardName = card.name;
+      var deleted = Trello.deleteCard(cardId);
+      logDeleted.push( 'Card ID: ' + cardId + ' / Card Name: ' + cardName);
+      counter += 1;
+      if (counter == rateLimit - 10) { // rateLimit minus 10 for a safe margin
+        Utilities.sleep(interval);
+        counter = 0;
+      }
+    }
+    logDeleted = logDeleted.join('\n');
+    ui.alert('Archived cards deleted / アーカイブされたカードが削除されました', logDeleted, ui.ButtonSet.OK);
+  } catch(e) {
+    var error = 'Canceled \n\n' + errorMessage(e);
+    ui.alert(error);
   }
 }
 
 /**
- * Show Trello Key & Token on alert window. Useful for making test requests on Trello Developers website
+ * Show Trello Key & Token on alert window. Useful for making test requests on Trello Developers website.
  */
 function showKeyToken(){
   var ui = SpreadsheetApp.getUi();
