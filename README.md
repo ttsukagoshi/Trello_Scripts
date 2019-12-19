@@ -2,11 +2,11 @@
 
 # Trello Scripts
 Google App Scripts to manage Trello using its API and Google Spreadsheet.  
-To be used as a spreadsheet-bound script.
 
 ## Content
-- code.gs: primary file with the main codes written
-- common.gs: some common functions that can be used elsewhere (but not to often as to list it in a library)
+- code.gs: Primary file with the main codes written. To be used as a spreadsheet-bound script.
+- common.gs: Some common functions that can be used elsewhere (but not to often as to list it in a library)
+- TrelloScriptLibrary.gs: Code for the library that code.gs uses.
 
 ## Prepare
 1. Create a new Google Spreadsheet (or use an existing Spreadsheet).
@@ -17,6 +17,7 @@ To be used as a spreadsheet-bound script.
     - userName: Username for your Trello account
     - boardId: Trello Board Id that you want to manage using the script   
 If you're not sure where to find the API keys and tokens for Trello, see [API Key Security](https://developers.trello.com/docs/api-key-security) at the Trello Developers documentation.
+1. Enable TrelloScript Library by entering its project key `M44otJ56pF074bNKTJJ7ktI0YdntMo1yT` on *Resources* -> *Library* -> *Add a Library*. The default identifier `TrelloScript` is used in scripts of code.gs.
 1. Refresh the Google Spreadsheet; you'll see that a menu *Trello* is added to your menu
 
 ## Functions
@@ -24,6 +25,8 @@ If you're not sure where to find the API keys and tokens for Trello, see [API Ke
 - showKeyToken (Menu Name: *Key & Token*): Shows on an alert window your Trello API key and token registered on your script properties. Useful for making test requests on [Trello Developers website](https://developers.trello.com/). 
 - trelloBoards (Menu Name: *Get My Board*): Returns the list of the names and IDs of all Trello boards available to your account as a pop-up alert. Useful for getting board IDs for other functions.
 - trelloReport (Menu Name: *Get Board Content*): Creates a new sheet on the spreadsheet and list all cards in a Trello board, including archived ones, on it. Designate board by board ID.
+
+## Methods in *TrelloScript* Library
 
 ## References
 - [Trello Developers](https://developers.trello.com/): Official documentation for Trello API
