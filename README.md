@@ -27,27 +27,7 @@ If you're not sure where to find the API keys and tokens for Trello, see [API Ke
 - trelloReport (Menu Name: *Get Board Content*): Creates a new sheet on the spreadsheet and list all cards in a Trello board, including archived ones, on it. Designate board by board ID.
 
 ## Variables and Methods in *TrelloScript* Library
-| Type | Name | Return Type | Brief Discription |
-| --- | --- | --- | --- |
-| var | baseUrl | - | Basic URL for making requests to Trello API, including the API version. |
-| var | trelloKey | - | Variable for API key. Should be reset by the individual scripts using the library. |
-| var | trelloToken | - | Variable for API token. Should be reset by the individual scripts using the library. |
-| var | apiKeyToken | - | Variable for a set of API key & token to be used in subsequent functions. Should be reset by the individual scripts using the library. |
-| method | get(string *url*) | JSON object | Makes a HTTP GET request to the *url*. |
-| method | post(string *url*) | JSON object | Makes a HTTP POST request to the *url*. |
-| method | tDelete(string *url*) | JSON object | Makes a HTTP DELETE request to the *url*. |
-| method | getMyBoardsUrl(boolean *simple*) | string | Returns the unique URL for method *getMyBoards*. If input *simple* is TRUE, returns the URL for retrieving only board ID and name. Defaults to false. |
-| method | getMyBoards(boolean *simple*) | object | Returns details of the boards of the current user, as represented by the Trello API key and token. If input *simple* is TRUE, returns only board ID and name. Defaults to false. |
-| method | getBoardUrl(string *boardId*) | string | --- |
-| --- | --- | --- | --- |
-| --- | --- | --- | --- |
-| --- | --- | --- | --- |
-| --- | --- | --- | --- |
-| --- | --- | --- | --- |
-| --- | --- | --- | --- |
-| --- | --- | --- | --- |
-| --- | --- | --- | --- |
-
+See TrelloScriptLibrary_documentation.md
 
 ## References
 - [Trello Developers](https://developers.trello.com/): Official documentation for Trello API
