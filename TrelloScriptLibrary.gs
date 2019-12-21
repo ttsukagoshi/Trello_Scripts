@@ -55,6 +55,8 @@ function getMyBoardsUrl(simple) {
 
 /**
  * Retrieve details of the boards of the current user, as represented by the Trello API key and token
+ * https://developers.trello.com/reference#membersidboards
+ * 
  * @param {boolean} simple: if true, returns the partial URL for retrieving only board ID and name. Defaults to false.
  * @return {Object} myBoards: parsed JSON object showing details of the user's boards
  */
@@ -88,6 +90,8 @@ function getBoardUrl(boardId){
 
 /**
  * Retrieve details of a board
+ * https://developers.trello.com/reference#boardsboardid-1
+ *
  * @param {string} boardId: Trello Board ID
  * @return {Object} board: details of board
  */
@@ -105,7 +109,7 @@ function getBoard(boardId) {
 }
 
 /**
- * Function to return URL for getCards.
+ * Function to return URL for getBoardCards.
  * @param {string} boardId: Board ID of the target Trello board
  * @param {string} option: 'all', 'closed', 'none', 'open', or 'visible'
  * @return {string} uUrl: unique part of url for this GET call
@@ -117,6 +121,8 @@ function getBoardCardsUrl(boardId, option){
 
 /**
  * Returns an object of all cards in a designated Trello board
+ * https://developers.trello.com/reference#boardsboardidtest
+ *
  * @param {string} boardId: Board ID of the target Trello board
  * @param {string} option: 'all', 'closed', 'none', 'open', or 'visible'
  * @return {Object} cards: cards in the targeted board
@@ -135,7 +141,37 @@ function getBoardCards(boardId, option){
 }
 
 /**
- * Function to return URL for getLists.
+ * Function to return URL for getBoardChecklists.
+ * @param {string} boardId: Board ID of the target Trello board
+ * @return {string} uUrl: unique part of url for this GET call
+ */
+function getBoardChecklistsUrl(boardId){
+  var uUrl = '/boards/' + boardId + '/checklists';
+  return uUrl;
+}
+
+/**
+ * Returns an object of all checklists in a designated Trello board
+ * https://developers.trello.com/reference#boardsboardidactions-3
+ * 
+ * @param {string} boardId: Board ID of the target Trello board
+ * @return {Object} checklists: checklists in the targeted board
+ */
+function getBoardChecklists(boardId){
+  var extUrl = getBoardChecklistsUrl(boardId) + '?' + apiKeyToken;
+  var url = baseUrl + extUrl;
+  try {
+    var checklists = get(url);
+    checklists = JSON.parse(checklists);
+    return checklists;
+  } catch(e) {
+    var error = errorMessage(e);
+    return error;
+  }
+}
+
+/**
+ * Function to return URL for getBoardLists.
  * @param {string} boardId: Board ID of the target Trello board
  * @return {string} uUrl: unique part of url for this GET call
  */
@@ -146,6 +182,8 @@ function getBoardListsUrl(boardId) {
 
 /**
  * Returns an object of all lists in a designated Trello board
+ * https://developers.trello.com/reference#boardsboardidlists
+ * 
  * @param {string} boardId: Board ID of the target Trello board
  * @return {Object} lists: cards in the targeted board
  */
@@ -184,8 +222,10 @@ function batchGet(urls) {
 
 /**
  * Create Trello card
+ * https://developers.trello.com/reference#cardsid-1
+ * 
  * @param {Object} queryParams: object in form of {[query params1]=[parameter1],[query params2]=[parameter2], ...}
- * See https://developers.trello.com/reference#cardsid-1 for full details of available query params.
+ * See above URL for full details of available query params.
  * @return {Object} createdCard: parsed JSON object with the details of the card created
  */
 function postCard(queryParams) {
@@ -210,6 +250,8 @@ function postCard(queryParams) {
 
 /**
  * Delete card
+ * https://developers.trello.com/reference#delete-card
+ * 
  * @param {string} cardId: Trello card ID
  * @return {Object} deleted: result of DELETE
  */
