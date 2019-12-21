@@ -51,9 +51,9 @@ function trelloReport(){
   // Get contents of Trello board
   var boardId = pBoardId;
   var getBoardUrl = TrelloScript.getBoardUrl(boardId);
-  var getCardsUrl = TrelloScript.getCardsUrl(boardId,'all');
-  var getListsUrl = TrelloScript.getListsUrl(boardId);
-  var urls = [getBoardUrl, getCardsUrl, getListsUrl];
+  var getBoardCardsUrl = TrelloScript.getBoardCardsUrl(boardId,'all');
+  var getBoardListsUrl = TrelloScript.getBoardListsUrl(boardId);
+  var urls = [getBoardUrl, getBoardCardsUrl, getBoardListsUrl];
   var responses = TrelloScript.batchGet(urls);
   var board = responses[0]['200']; // HTTP Response header 200 for valid request
   var cards = responses[1]['200']; // HTTP Response header 200 for valid request
@@ -147,8 +147,8 @@ function deleteArchivedCards() {
   // Getting target board and card information
   var boardId = pBoardId;
   var getBoardUrl = TrelloScript.getBoardUrl(boardId);
-  var getCardsUrl = TrelloScript.getCardsUrl(boardId,'closed');
-  var urls = [getBoardUrl, getCardsUrl];
+  var getBoardCardsUrl = TrelloScript.getBoardCardsUrl(boardId,'closed');
+  var urls = [getBoardUrl, getBoardCardsUrl];
   var responses = TrelloScript.batchGet(urls);
   var board = responses[0]['200']; // HTTP Response header 200 for valid request
   var cards = responses[1]['200']; // HTTP Response header 200 for valid request
