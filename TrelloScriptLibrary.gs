@@ -110,7 +110,7 @@ function getBoard(boardId) {
  * @param {string} option: 'all', 'closed', 'none', 'open', or 'visible'
  * @return {string} uUrl: unique part of url for this GET call
  */
-function getCardsUrl(boardId, option){
+function getBoardCardsUrl(boardId, option){
   var uUrl = '/boards/' + boardId + '/cards/' + option;
   return uUrl;
 }
@@ -121,8 +121,8 @@ function getCardsUrl(boardId, option){
  * @param {string} option: 'all', 'closed', 'none', 'open', or 'visible'
  * @return {Object} cards: cards in the targeted board
  */
-function getCards(boardId, option){
-  var extUrl = getCardsUrl(boardId, option) + '?' + apiKeyToken;
+function getBoardCards(boardId, option){
+  var extUrl = getBoardCardsUrl(boardId, option) + '?' + apiKeyToken;
   var url = baseUrl + extUrl;
   try {
     var cards = get(url);
@@ -139,7 +139,7 @@ function getCards(boardId, option){
  * @param {string} boardId: Board ID of the target Trello board
  * @return {string} uUrl: unique part of url for this GET call
  */
-function getListsUrl(boardId) {
+function getBoardListsUrl(boardId) {
   var uUrl = '/boards/' + boardId + '/lists';
   return uUrl;
 }
@@ -149,8 +149,8 @@ function getListsUrl(boardId) {
  * @param {string} boardId: Board ID of the target Trello board
  * @return {Object} lists: cards in the targeted board
  */
-function getLists(boardId) {
-  var extUrl = getListsUrl(boardId) + '?' + apiKeyToken;
+function getBoardLists(boardId) {
+  var extUrl = getBoardListsUrl(boardId) + '?' + apiKeyToken;
   var url = baseUrl + extUrl;
   try {
     var lists = get(url);
