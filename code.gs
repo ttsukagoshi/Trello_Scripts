@@ -50,16 +50,48 @@ function trelloBoards(){
 function trelloReport(){
   // Get contents of Trello board
   var boardId = pBoardId;
+  var data = trelloData(boardId); // Details of trelloData function are described below
+  var boardName = data[0];
+  var header = data[1];
+  var content = data[2];
+  var actions = data[3];
+ Logger.log(actions);
+  
+  // Create a new sheet in this Google Spreadsheet
+  var now = Utilities.formatDate(new Date(), timeZone, 'yyyyMMddHHmmss');
+  var sheetName = 'TrelloReport' + now;
+  
+  var reportSS = SpreadsheetApp.getActiveSpreadsheet();
+  var reportSheet = reportSS.insertSheet(sheetName, 0); // Insert new sheet at the left-most position (<- sheetIndex = 0)
+  var sheetTitle = reportSheet.getRange(1,1).setValue('Trello Board Name: ' + boardName);
+  var sheetHeader = reportSheet.getRange(3,1,1,header[0].length).setValues(header);
+  var reportData = reportSheet.getRange(4,1,content.length,header[0].length).setValues(content);
+}
+
+
+/**
+ * Get contents of a Trello board, i.e., board name, full list of cards in the board, and actions.
+ * 
+ * @param {string} boardId;
+ * @return {object} data: array of board data in form of [boardName, header, content, actions, timestamp]
+ */
+function trelloData(boardId){
+  // timestamp
+  var timestamp = Utilities.formatDate(new Date(), timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX");;
+  
+  // get contents of Trello board
   var getBoardUrl = TrelloScript.getBoardUrl(boardId);
   var getBoardCardsUrl = TrelloScript.getBoardCardsUrl(boardId,'all');
   var getBoardChecklistsUrl = TrelloScript.getBoardChecklistsUrl(boardId);
   var getBoardListsUrl = TrelloScript.getBoardListsUrl(boardId);
-  var urls = [getBoardUrl, getBoardCardsUrl, getBoardChecklistsUrl, getBoardListsUrl];
+  var getBoardActionsUrl = TrelloScript.getBoardActionsUrl(boardId);
+  var urls = [getBoardUrl, getBoardCardsUrl, getBoardChecklistsUrl, getBoardListsUrl, getBoardActionsUrl];
   var responses = TrelloScript.batchGet(urls);
   var board = responses[0]['200']; // HTTP Response header 200 for valid request
   var cards = responses[1]['200']; // HTTP Response header 200 for valid request
   var checklists = responses[2]['200']; // HTTP Response header 200 for valid request
-  var lists = responses[3]['200']; // HTTP Response header 200 for valid request
+  var lists = responses[3]['200']; // HTTP Response header 200 for valid request 
+  var actions = responses[4]['200']; // HTTP Response header 200 for valid request
   
   // Board information
   var boardName = board.name;
@@ -82,12 +114,27 @@ function trelloReport(){
     listsIdName[ilistId] = ilistName;
   }
   
-  // Objects to enter into spreadsheet
-  var header = [];
-  var data = [];
-  header[0] = ['cardId', 'cardName', 'cardClosed', 'dateLastActivity', 'cardDesc', 'checklistsString', 'due', 'dueComplete', 'listName', 'labelNames', 'cardShortUrl']; // Must be in line with the below {object} data
+  // Objects to return
+  var header = []; // two-dimensional array to enter header texts at index = 0
+  var content = [];
+  var actionsList = [];
   
-  // Convert contents of {object}cards into array
+  // Define header; must be in line with the below {object}content
+  header[0] = [
+    'cardId', 
+    'cardName', 
+    'cardClosed', 
+    'dateLastActivity', 
+    'cardDesc', 
+    'checklistsString', 
+    'due', 
+    'dueComplete', 
+    'listName', 
+    'labelNames', 
+    'cardShortUrl'
+  ];
+
+  // Convert contents of {object}cards into {array}content
   for (var i = 0; i < cards.length; i++) {
     var card = cards[i];
     var cardId = card.id;
@@ -102,7 +149,6 @@ function trelloReport(){
     var cardLabels= card.labels;
     var cardName = card.name;
     var cardShortUrl = card.shortUrl;
-    
     // Format params
     // dateLastActivity
     if (dateLastActivity !== null) {
@@ -143,19 +189,49 @@ function trelloReport(){
       labelNames.push(label.name);
     }
     labelNames = labelNames.join(', ');
-    
-    data[i] = [cardId, cardName, cardClosed, dateLastActivity, cardDesc, checklistsString, due, dueComplete, listName, labelNames, cardShortUrl];
+    content[i] = [
+      cardId, 
+      cardName, 
+      cardClosed, 
+      dateLastActivity, 
+      cardDesc, 
+      checklistsString, 
+      due, 
+      dueComplete, 
+      listName, 
+      labelNames, 
+      cardShortUrl
+    ];
   }
- 
-  // Create a new sheet in this Google Spreadsheet
-  var now = Utilities.formatDate(new Date(), timeZone, 'yyyyMMddHHmmss');
-  var sheetName = 'TrelloReport' + now;
   
-  var reportSS = SpreadsheetApp.getActiveSpreadsheet();
-  var reportSheet = reportSS.insertSheet(sheetName, 0); // Insert new sheet at the left-most position (<- sheetIndex = 0)
-  var sheetTitle = reportSheet.getRange(1,1).setValue('Trello Board Name: ' + boardName);
-  var sheetHeader = reportSheet.getRange(3,1,1,header[0].length).setValues(header);
-  var reportData = reportSheet.getRange(4,1,data.length,header[0].length).setValues(data);
+  // Convert contents of {object}actions into {array}actionsList
+  for (var i = 0; i < actions.length; i++) {
+    var action = actions[i];
+    var aActionDate = stDate(action.date);
+    var aActionId = action.id;
+    var aActionType = action.type;
+    var aCardId = action.data.card.id || 'NA';
+    var aCardName = action.data.card.name || 'NA';
+    var aCommentText = action.data.text || 'NA';
+    var aActionMemberCreatorId = action.memberCreator.id;
+    var aActionMemberCreatorUsername = action.memberCreator.username;
+    var aActionMemberCreatorFullName = action.memberCreator.fullName;
+    
+    actionsList[i] = [
+      aActionDate, 
+      aActionId, 
+      aActionType, 
+      aCardId, 
+      aCardName,
+      aCommentText,
+      aActionMemberCreatorId,
+      aActionMemberCreatorUsername,
+      aActionMemberCreatorFullName
+    ];
+  }
+  
+  var data = [boardName, header, content, actionsList, timestamp];
+  return data;
 }
 
 
