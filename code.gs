@@ -124,13 +124,12 @@ function trelloData(boardId){
   // Objects to return
   var header = []; // two-dimensional array to enter header texts at index = 0
   var contents = [],
-      contentObj = {},
-      actionsList = [],
-      actionsListObj = {};
+      actionsList = [];
 
   // Convert contents of {object}cards into {array}content
   for (var i = 0; i < cards.length; i++) {
-    var card = cards[i];
+    var contentObj = {},
+        card = cards[i];
     var cardId = card.id,
         cardClosed = card.closed,
         dateLastActivity = card.dateLastActivity,
@@ -204,16 +203,17 @@ function trelloData(boardId){
   
   // Convert contents of {object}actions into {array}actionsList
   for (var i = 0; i < actions.length; i++) {
-    var action = actions[i];
-    var aActionDate = stDate(action.date);
-    var aActionId = action.id;
-    var aActionType = action.type;
+    var actionsListObj = {},
+        action = actions[i];
+    var aActionDate = stDate(action.date),
+        aActionId = action.id,
+        aActionType = action.type,
+        aActionMemberCreatorId = action.memberCreator.id,
+        aActionMemberCreatorUsername = action.memberCreator.username,
+        aActionMemberCreatorFullName = action.memberCreator.fullName;
     var aCardId = action.data.card.id || 'NA';
     var aCardName = action.data.card.name || 'NA';
     var aCommentText = action.data.text || 'NA';
-    var aActionMemberCreatorId = action.memberCreator.id;
-    var aActionMemberCreatorUsername = action.memberCreator.username;
-    var aActionMemberCreatorFullName = action.memberCreator.fullName;
     
     actionsListObj['aActionDate'] = aActionDate;
     actionsListObj['aActionId'] = aActionId;
