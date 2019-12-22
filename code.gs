@@ -52,17 +52,28 @@ function trelloReport(){
   var boardId = pBoardId;
   var getBoardUrl = TrelloScript.getBoardUrl(boardId);
   var getBoardCardsUrl = TrelloScript.getBoardCardsUrl(boardId,'all');
+  var getBoardChecklistsUrl = TrelloScript.getBoardChecklistsUrl(boardId);
   var getBoardListsUrl = TrelloScript.getBoardListsUrl(boardId);
-  var urls = [getBoardUrl, getBoardCardsUrl, getBoardListsUrl];
+  var urls = [getBoardUrl, getBoardCardsUrl, getBoardChecklistsUrl, getBoardListsUrl];
   var responses = TrelloScript.batchGet(urls);
   var board = responses[0]['200']; // HTTP Response header 200 for valid request
   var cards = responses[1]['200']; // HTTP Response header 200 for valid request
-  var lists = responses[2]['200']; // HTTP Response header 200 for valid request
+  var checklists = responses[2]['200']; // HTTP Response header 200 for valid request
+  var lists = responses[3]['200']; // HTTP Response header 200 for valid request
   
   // Board information
   var boardName = board.name;
   var boardLabels = board.labelNames;
-  // Object for list ID and list name in the board
+  // Checklist index object of checklist ID, name, and checkItems object
+  var checklistIndex = {};
+  for (var i = 0; i < checklists.length; i++) {
+    var iChecklist = checklists[i];
+    var cId = iChecklist.id;
+    var cName = iChecklist.name;
+    var cItems = iChecklist.checkItems;
+    checklistIndex[cId] = [cName, cItems];
+  }
+  // List index object of list ID and name in the board
   var listsIdName = {};
   for (var i = 0; i < lists.length; i++) {
     var ilist = lists[i];
@@ -74,10 +85,10 @@ function trelloReport(){
   // Objects to enter into spreadsheet
   var header = [];
   var data = [];
-  header[0] = ['cardId', 'cardName', 'cardClosed', 'dateLastActivity', 'cardDesc', 'due', 'dueComplete', 'listName', 'labelNames', 'cardShortUrl']; // Must be in line with the below {object} data
+  header[0] = ['cardId', 'cardName', 'cardClosed', 'dateLastActivity', 'cardDesc', 'checklistsString', 'due', 'dueComplete', 'listName', 'labelNames', 'cardShortUrl']; // Must be in line with the below {object} data
   
   // Convert contents of {object}cards into array
-  for (i = 0; i < cards.length; i++) {
+  for (var i = 0; i < cards.length; i++) {
     var card = cards[i];
     var cardId = card.id;
     var cardClosed = card.closed;
@@ -101,6 +112,28 @@ function trelloReport(){
     if (due !== null) {
       due = stDate(due);
     }
+    // checklist(s) contents
+    var checklistsString = '';
+    if (idChecklists.length > 0) {
+      for (var j = 0; j < idChecklists.length; j++) {
+        var br = '';
+        var idChecklist = idChecklists[j];
+        var checklist = checklistIndex[idChecklist];
+        if (j !== 0) {
+          br = '\n\n';
+        }
+        var checklistTitle = br + checklist[0]; // name of this checklist
+        checklistsString += checklistTitle;
+        var checkItems = checklist[1];
+        for (var k = 0; k < checkItems.length; k++) {
+          var checkItem = checkItems[k];
+          var checkItemName = checkItem.name;
+          var checkItemState = checkItem.state; // 'complete' or 'incomplete'
+          var checkItemText = '\n- ' + checkItemState + ': ' + checkItemName;
+          checklistsString += checkItemText;
+        }
+      }
+    }
     // listName
     var listName = listsIdName[idList];
     // labelNames
@@ -111,7 +144,7 @@ function trelloReport(){
     }
     labelNames = labelNames.join(', ');
     
-    data[i] = [cardId, cardName, cardClosed, dateLastActivity, cardDesc, due, dueComplete, listName, labelNames, cardShortUrl];
+    data[i] = [cardId, cardName, cardClosed, dateLastActivity, cardDesc, checklistsString, due, dueComplete, listName, labelNames, cardShortUrl];
   }
  
   // Create a new sheet in this Google Spreadsheet
