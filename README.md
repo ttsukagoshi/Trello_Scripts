@@ -8,6 +8,9 @@ Google App Scripts to manage Trello using its API and Google Spreadsheet.
 - common.gs: Some common functions that can be used elsewhere (but not to often as to list it in a library)
 - TrelloScriptLibrary.gs: Code for the library that code.gs uses.
 
+## Scope of Authentications
+- scope ...
+
 ## Prepare
 1. Create a new Google Spreadsheet (or use an existing Spreadsheet).
 1. Copy contents of **code.gs** and **common.gs** into the spreadsheet using the script editor ([Custom Functions in Google Sheets](https://developers.google.com/apps-script/guides/sheets/functions) is a good place to start if you don't know what I mean by the script editor) and save the code.
