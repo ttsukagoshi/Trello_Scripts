@@ -75,7 +75,6 @@ function trelloReport(){
   var reportData = reportSheet.getRange(4,1,contentsValues.length,contentsHeader[0].length).setValues(contentsValues);
 }
 
-
 /**
  * Get contents of a Trello board, i.e., board name, full list of cards in the board, and actions.
  * 
@@ -210,17 +209,24 @@ function trelloData(boardId){
         aActionType = action.type,
         aActionMemberCreatorId = action.memberCreator.id,
         aActionMemberCreatorUsername = action.memberCreator.username,
-        aActionMemberCreatorFullName = action.memberCreator.fullName;
+        aActionMemberCreatorFullName = action.memberCreator.fullName,
+        aActionData = JSON.stringify(action.data);
+    
+    /*
     var aCardId = action.data.card.id || 'NA';
     var aCardName = action.data.card.name || 'NA';
     var aCommentText = action.data.text || 'NA';
+    */
     
     actionsListObj['aActionDate'] = aActionDate;
     actionsListObj['aActionId'] = aActionId;
     actionsListObj['aActionType'] = aActionType;
+    actionsListObj['aActionData'] = aActionData;
+    /*
     actionsListObj['aCardId'] = aCardId;
     actionsListObj['aCardName'] = aCardName;
     actionsListObj['aCommentText'] = aCommentText;
+    */
     actionsListObj['aActionMemberCreatorId'] = aActionMemberCreatorId;
     actionsListObj['aActionMemberCreatorUsername'] = aActionMemberCreatorUsername;
     actionsListObj['aActionMemberCreatorFullName'] = aActionMemberCreatorFullName;
@@ -239,11 +245,12 @@ function trelloData(boardId){
  */
 function deleteArchivedCards() {
   // set counters to avoid hitting Trello API rate limits
-  /* Reference: https://developers.trello.com/docs/rate-limits
+  /**
+   * Reference: https://developers.trello.com/docs/rate-limits
    * To help prevent strain on Trello’s servers, our API imposes rate limits per API key for all issued tokens. There is a limit of
    * 300 requests per 10 seconds for each API key and 
    * 100 requests per 10 seconds interval for each token.
-  */
+   */
   var rateLimit = 100,
       interval = ( 10 * 1000 ), // in milliseconds
       counter = 0;
