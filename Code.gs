@@ -1,15 +1,14 @@
-// Global vars
+// Global variables
 var userLocale = Session.getActiveUserLocale(),
     scriptProperties = PropertiesService.getScriptProperties(); // File > Properties > Script Properties
-// Update Library properties
+// Update library properties
 TrelloScript.trelloKey = scriptProperties.getProperty('trelloKey'); // Trello API Key
 TrelloScript.trelloToken = scriptProperties.getProperty('trelloToken'); // Trello API Token
 var pTrelloKey = TrelloScript.trelloKey,
     pTrelloToken = TrelloScript.trelloToken;
 TrelloScript.apiKeyToken = 'key=' + pTrelloKey + '&token=' + pTrelloToken;
-// params from script properties
-var pUserName = scriptProperties.getProperty('userName'),
-    pBoardId = scriptProperties.getProperty('boardId');
+// Parameters from script properties
+var pBoardId = scriptProperties.getProperty('boardId');
 
 // Add to menu when spreadsheet is opened
 function onOpen(e) {
@@ -30,8 +29,10 @@ function onOpen(e) {
 function trelloBoards(){
   var ui = SpreadsheetApp.getUi(),
       simple = true,
-      myBoards = TrelloScript.getMyBoards(simple),
       alertMessage = [];
+  // Get board information in simple form (only name and ID)
+  var myBoards = TrelloScript.getMyBoards(simple);
+  
   alertMessage.push('Board ID/Name: ')
   
   for (var i = 0; i < myBoards.length; i++) {
@@ -78,14 +79,14 @@ function trelloReport(){
 /**
  * Get contents of a Trello board, i.e., board name, full list of cards in the board, and actions.
  * 
- * @param {string} boardId;
- * @return {object} data: array of board data in form of [boardName, header, content, actions, timestamp]
+ * @param {string} boardId
+ * @return {object} data - array of board data in form of [boardName, header, content, actions, timestamp]
  */
 function trelloData(boardId){
   // timestamp
   var timestamp = Utilities.formatDate(new Date(), timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX");
   
-  // get contents of Trello board
+  // Get contents of Trello board
   var getBoardUrl = TrelloScript.getBoardUrl(boardId),
       getBoardCardsUrl = TrelloScript.getBoardCardsUrl(boardId,'all'),
       getBoardChecklistsUrl = TrelloScript.getBoardChecklistsUrl(boardId),
@@ -222,11 +223,6 @@ function trelloData(boardId){
     actionsListObj['aActionId'] = aActionId;
     actionsListObj['aActionType'] = aActionType;
     actionsListObj['aActionData'] = aActionData;
-    /*
-    actionsListObj['aCardId'] = aCardId;
-    actionsListObj['aCardName'] = aCardName;
-    actionsListObj['aCommentText'] = aCommentText;
-    */
     actionsListObj['aActionMemberCreatorId'] = aActionMemberCreatorId;
     actionsListObj['aActionMemberCreatorUsername'] = aActionMemberCreatorUsername;
     actionsListObj['aActionMemberCreatorFullName'] = aActionMemberCreatorFullName;
