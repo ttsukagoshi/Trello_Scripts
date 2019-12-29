@@ -16,11 +16,52 @@ function onOpen(e) {
   .createMenu('Trello')
   .addItem('Get Board Content', 'trelloReport')
   .addSeparator()
-  .addItem('Key & Token', 'showKeyToken')
+  .addItem('Key & Token', 'trelloShowKeyToken')
   .addItem('Get My Board', 'trelloBoards')
   .addSeparator()
-  .addItem('Delete Archived Cards', 'deleteArchivedCards')
+  .addItem('Delete Archived Cards', 'trelloDeleteArchivedCards')
   .addToUi();
+}
+
+/*************************************************************************/
+// Menu Functions 
+/*************************************************************************/
+
+/**
+ * List the contents of a Trello board into a newly created Google Spreadsheet sheet
+ */
+function trelloReport(){
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  // Get contents of Trello board
+  var boardId = pBoardId,
+      data = trelloData(boardId); // Details of trelloData function are described below
+  var boardName = data[0],
+      timestamp = data[1],
+      contents = data[2],
+      actions = data[3];
+  
+  // Sheet Name(s)
+  var timestampName = Utilities.formatDate(timestamp, timeZone, 'yyyyMMddHHmmss');
+  var contentsSheetName = 'TrelloReport' + timestampName + '_content';
+  var actionsSheetName = 'TrelloReport' + timestampName + '_actions';
+  
+  var dataSet = [
+    {'sheetName' : contentsSheetName, 'sheetData' : contents},
+    {'sheetName' : actionsSheetName, 'sheetData' : actions}
+    ];
+  var createdSheets = createSheets(ss, dataSet, 'Trello Board Name: ' + boardName, timestamp);
+}
+
+/*************************************************************************/
+
+/**
+ * Show Trello Key & Token on alert window. Useful for making test requests on Trello Developers website.
+ */
+function trelloShowKeyToken(){
+  var ui = SpreadsheetApp.getUi(),
+      alertMessage = 'Handle with care!!!\n\nKey: ' + pTrelloKey + '\nToken: ' + pTrelloToken;
+  ui.alert(alertMessage);
 }
 
 /**
@@ -45,46 +86,85 @@ function trelloBoards(){
   ui.alert(alertMessage);
 }
 
+/*************************************************************************/
+
 /**
- * List the contents of a Trello board into a newly created Google Spreadsheet sheet
+ * Bulk delete all archived cards in a designated Trello board
+ * NOTE: CANNOT BE UNDONE!!!
  */
-function trelloReport(){
-  // Get contents of Trello board
+function trelloDeleteArchivedCards() {
+  // set counters to avoid hitting Trello API rate limits
+  /**
+   * Reference: https://developers.trello.com/docs/rate-limits
+   * To help prevent strain on Trello’s servers, our API imposes rate limits per API key for all issued tokens. There is a limit of
+   * 300 requests per 10 seconds for each API key and 
+   * 100 requests per 10 seconds interval for each token.
+   */
+  var rateLimit = 100,
+      interval = ( 10 * 1000 ), // in milliseconds
+      counter = 0;
+  
+  // Log of all deleted cards
+  var logDeleted = [];
+  
+  // Getting target board and card information
   var boardId = pBoardId,
-      data = trelloData(boardId), // Details of trelloData function are described below
-      boardName = data[0],
-      contents = data[1],
-      actions = data[2],
-      timestamp = data[3];
+      getBoardUrl = TrelloScript.getBoardUrl(boardId),
+      getBoardCardsUrl = TrelloScript.getBoardCardsUrl(boardId,'closed'),
+      urls = [getBoardUrl, getBoardCardsUrl],
+      responses = TrelloScript.batchGet(urls),
+      board = responses[0]['200'], // HTTP Response header 200 for valid request
+      cards = responses[1]['200']; // HTTP Response header 200 for valid request
   
-  // format objects for table
-  var contentsOutput = breakdownObject(contents),
-      actionsOutput = breakdownObject(actions);
+  var boardName = board.name;
   
-  var contentsHeader = contentsOutput[0],
-      contentsValues = contentsOutput[1],
-      actionsHeader = actionsOutput[0],
-      actionsValues = actionsOutput[1];
+  // Prompt Message
+  var ui = SpreadsheetApp.getUi(),
+      promptMessage = 'You are about to delete all archived cards in Trello board \"' + boardName + '\." This action CANNOT BE UNDONE. To continue, enter name of target board for confirmation:';
+  if (userLocale === 'ja') {
+    promptMessage = 'Trelloボード名「' + boardName + '」内でアーカイブされた全てのカードを削除しようとしています。この操作は元に戻せません。\n続けるには、確認のために対象ボード名を入力してください。';
+  }
   
-  // Create a new sheet in this Google Spreadsheet
-  var timestampName = Utilities.formatDate(new Date(timestamp), timeZone, 'yyyyMMddHHmmss');
-  var sheetName = 'TrelloReport' + timestampName;
-  
-  var reportSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(sheetName, 0); // Insert new sheet at the left-most position (<- sheetIndex = 0)
-  var sheetTitle = reportSheet.getRange(1,1).setValue('Trello Board Name: ' + boardName);
-  var sheetHeader = reportSheet.getRange(3,1,1,contentsHeader[0].length).setValues(contentsHeader);
-  var reportData = reportSheet.getRange(4,1,contentsValues.length,contentsHeader[0].length).setValues(contentsValues);
+  try {
+    var promptConfirmation = ui.prompt('Confirm Delete / 確認', promptMessage, ui.ButtonSet.OK_CANCEL);
+    if (promptConfirmation.getSelectedButton() !== ui.Button.OK) {
+      throw new Error('Action Canceled / 削除がキャンセルされました');
+    } else if (promptConfirmation.getResponseText() !== boardName) {
+      throw new Error('Board name does not match / ボード名が一致しません');
+    }
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i],
+          cardId = card.id,
+          cardName = card.name,
+          deleted = TrelloScript.deleteCard(cardId);
+      logDeleted.push( 'Card ID: ' + cardId + ' / Card Name: ' + cardName);
+      counter += 1;
+      if (counter == rateLimit - 10) { // rateLimit minus 10 for a safe margin
+        Utilities.sleep(interval);
+        counter = 0;
+      }
+    }
+    logDeleted = logDeleted.join('\n');
+    ui.alert('Archived cards deleted / アーカイブされたカードが削除されました', logDeleted, ui.ButtonSet.OK);
+  } catch(e) {
+    var error = 'Canceled \n\n' + TrelloScript.errorMessage(e);
+    ui.alert(error);
+  }
 }
+
+/*************************************************************************/
+// Background Functions 
+/*************************************************************************/
 
 /**
  * Get contents of a Trello board, i.e., board name, full list of cards in the board, and actions.
  * 
  * @param {string} boardId
- * @return {object} data - array of board data in form of [boardName, header, content, actions, timestamp]
+ * @return {object} data - array of board data in form of [{string}boardName, {Date}timestamp, {Object}contents, {Object}actions]
  */
 function trelloData(boardId){
   // timestamp
-  var timestamp = Utilities.formatDate(new Date(), timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+  var timestamp = new Date();
   
   // Get contents of Trello board
   var getBoardUrl = TrelloScript.getBoardUrl(boardId),
@@ -122,7 +202,6 @@ function trelloData(boardId){
   }
   
   // Objects to return
-  var header = []; // two-dimensional array to enter header texts at index = 0
   var contents = [],
       actionsList = [];
 
@@ -212,13 +291,7 @@ function trelloData(boardId){
         aActionMemberCreatorUsername = action.memberCreator.username,
         aActionMemberCreatorFullName = action.memberCreator.fullName,
         aActionData = JSON.stringify(action.data);
-    
-    /*
-    var aCardId = action.data.card.id || 'NA';
-    var aCardName = action.data.card.name || 'NA';
-    var aCommentText = action.data.text || 'NA';
-    */
-    
+       
     actionsListObj['aActionDate'] = aActionDate;
     actionsListObj['aActionId'] = aActionId;
     actionsListObj['aActionType'] = aActionType;
@@ -230,80 +303,6 @@ function trelloData(boardId){
     actionsList[i] = actionsListObj;
   }
   
-  var data = [boardName, contents, actionsList, timestamp];
+  var data = [boardName, timestamp, contents, actionsList];
   return data;
-}
-
-
-/**
- * Bulk delete all archived cards in a designated Trello board
- * NOTE: CANNOT BE UNDONE!!!
- */
-function deleteArchivedCards() {
-  // set counters to avoid hitting Trello API rate limits
-  /**
-   * Reference: https://developers.trello.com/docs/rate-limits
-   * To help prevent strain on Trello’s servers, our API imposes rate limits per API key for all issued tokens. There is a limit of
-   * 300 requests per 10 seconds for each API key and 
-   * 100 requests per 10 seconds interval for each token.
-   */
-  var rateLimit = 100,
-      interval = ( 10 * 1000 ), // in milliseconds
-      counter = 0;
-  
-  // Log of all deleted cards
-  var logDeleted = [];
-  
-  // Getting target board and card information
-  var boardId = pBoardId,
-      getBoardUrl = TrelloScript.getBoardUrl(boardId),
-      getBoardCardsUrl = TrelloScript.getBoardCardsUrl(boardId,'closed'),
-      urls = [getBoardUrl, getBoardCardsUrl],
-      responses = TrelloScript.batchGet(urls),
-      board = responses[0]['200'], // HTTP Response header 200 for valid request
-      cards = responses[1]['200']; // HTTP Response header 200 for valid request
-  
-  var boardName = board.name;
-  
-  // Prompt Message
-  var ui = SpreadsheetApp.getUi(),
-      promptMessage = 'You are about to delete all archived cards in Trello board \"' + boardName + '\." This action CANNOT BE UNDONE. To continue, enter name of target board for confirmation:';
-  if (userLocale === 'ja') {
-    promptMessage = 'Trelloボード名「' + boardName + '」内でアーカイブされた全てのカードを削除しようとしています。この操作は元に戻せません。\n続けるには、確認のために対象ボード名を入力してください。';
-  }
-  
-  try {
-    var promptConfirmation = ui.prompt('Confirm Delete / 確認', promptMessage, ui.ButtonSet.OK_CANCEL);
-    if (promptConfirmation.getSelectedButton() !== ui.Button.OK) {
-      throw new Error('Action Canceled / 削除がキャンセルされました');
-    } else if (promptConfirmation.getResponseText() !== boardName) {
-      throw new Error('Board name does not match / ボード名が一致しません');
-    }
-    for (var i = 0; i < cards.length; i++) {
-      var card = cards[i],
-          cardId = card.id,
-          cardName = card.name,
-          deleted = TrelloScript.deleteCard(cardId);
-      logDeleted.push( 'Card ID: ' + cardId + ' / Card Name: ' + cardName);
-      counter += 1;
-      if (counter == rateLimit - 10) { // rateLimit minus 10 for a safe margin
-        Utilities.sleep(interval);
-        counter = 0;
-      }
-    }
-    logDeleted = logDeleted.join('\n');
-    ui.alert('Archived cards deleted / アーカイブされたカードが削除されました', logDeleted, ui.ButtonSet.OK);
-  } catch(e) {
-    var error = 'Canceled \n\n' + TrelloScript.errorMessage(e);
-    ui.alert(error);
-  }
-}
-
-/**
- * Show Trello Key & Token on alert window. Useful for making test requests on Trello Developers website.
- */
-function showKeyToken(){
-  var ui = SpreadsheetApp.getUi(),
-      alertMessage = 'Handle with care!!!\n\nKey: ' + pTrelloKey + '\nToken: ' + pTrelloToken;
-  ui.alert(alertMessage);
 }
