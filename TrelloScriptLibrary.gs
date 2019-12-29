@@ -1,13 +1,13 @@
 /**
  * This is a Google App Script library for using Trello API on app script
  * For details, go to https://github.com/ttsukagoshi/Trello_Scripts/
-**/
+ */
 
 // Global vars
-var baseUrl = 'https://api.trello.com/1';
-var trelloKey = 'apiKey'; // to be declared at individual scripts
-var trelloToken = 'apiToken'; // to be declared at individual scripts
-var apiKeyToken = 'key=apiKey&token=apiToken'; // to be declared at individual scripts
+var baseUrl = 'https://api.trello.com/1',
+    trelloKey = 'apiKey', // to be declared at individual scripts
+    trelloToken = 'apiToken', // to be declared at individual scripts
+    apiKeyToken = 'key=apiKey&token=apiToken'; // to be declared at individual scripts
 
 /**
  * GET request
@@ -41,8 +41,8 @@ function tDelete(url) {
 
 /**
  * Function to return URL for getMyBoards
- * @param {boolean} simple - if true, returns the partial URL for retrieving only board ID and name. Defaults to false.
- * @return {String} uUrl - unique part of url for this GET call
+ * @param {Boolean} simple - if true, returns the partial URL for retrieving only board ID and name. Defaults to false.
+ * @return {string} uUrl - unique part of url for this GET call
  */
 function getMyBoardsUrl(simple) {
   simple = simple || false;
@@ -114,7 +114,7 @@ function getBoard(boardId) {
  * @return {string} uUrl - unique part of url for this GET call
  */
 function getBoardActionsUrl(boardId){
-  var uUrl = '/boards/' + boardId + '/actions';
+  var uUrl = '/boards/' + boardId + '/actions?limit=1000';
   return uUrl;
 }
 
@@ -127,11 +127,11 @@ function getBoardActionsUrl(boardId){
  * @return {Object} actions - the most recent 1,000 (upper limit) actions in the targeted board
  */
 function getBoardActions(boardId){
-  var extUrl = getBoardActionsUrl(boardId) + '?actions_limit=1000&' + apiKeyToken;
+  var extUrl = getBoardActionsUrl(boardId) + '&' + apiKeyToken;
   var url = baseUrl + extUrl;
   try {
     var actions = get(url);
-    actions = JSON.parse(checklists);
+    actions = JSON.parse(actions);
     return actions;
   } catch(e) {
     var error = errorMessage(e);
@@ -242,6 +242,9 @@ function batchGet(urls) {
   var encodedUrls = encodeURIComponent(urls.join());
   var url = baseUrl + '/batch/?urls=' + encodedUrls + '&' + apiKeyToken;
   try {
+    if (urls.length < 1) {
+      throw new Error('Enter one or more URL(s) in form of one-dimensional array.');
+    }
     var responses = this.get(url);
     responses = JSON.parse(responses);
     return responses;
