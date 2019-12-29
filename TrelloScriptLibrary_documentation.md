@@ -1,7 +1,7 @@
 日本語は準備中
 
 # Properties and Methods in *TrelloScript* Library
-See TrelloScriptLibrary.gs for actual code.  
+See **TrelloScriptLibrary.gs** for actual code.  
 See [the official documentation](https://developers.trello.com/) for detailed description.
 
 ## Properties
@@ -33,6 +33,18 @@ TrelloScript.apiKeyToken = 'key=' + myApiKey + '&token=' + myApiToken`;
 | post(string *url*) | JSON object | Makes a HTTP POST request to the *url*. |
 | tDelete(string *url*) | JSON object | Makes a HTTP DELETE request to the *url*. |
 | getMyBoardsUrl(boolean *simple*) | string | Returns `/members/me/boards` or if `simple === true`, `/members/me/boards?fields=name`|
-| getMyBoards(boolean *simple*) | object | https://developers.trello.com/reference#membersidboards |
+| getMyBoards(boolean *simple*) | Object | Retrieve details of the boards of the current user, as represented by the Trello API key and token. https://developers.trello.com/reference#membersidboards |
 | getBoardUrl(string *boardId*) | string | Returns `/boards/[Board ID]` |
-| getBoard(string *boardId*) | object | https://developers.trello.com/reference#boardsboardid-1 |
+| getBoard(string *boardId*) | Object | Retrieve details of a board. https://developers.trello.com/reference#boardsboardid-1 |
+| getBoardActionsUrl(string *boardId*) | string | Returns `/boards/[Board ID]/actions?limit=1000` |
+| getBoardActions(string *boardId*) | Object | Returns an object of actions in a designated Trello board. Only the most recent 1,000 actions can be retrieved, as limited by the Trello API. https://developers.trello.com/reference#boardsboardidactions |
+| getBoardCardsUrl(string *boardId*, string *option*) | string | Returns `/boards/[Board ID]/cards/[option]`, where *option* can be one of `all`, `closed`, `none`, `open`, or `visible` to designate the type of cards to retrieve by this URL |
+| getBoardCards(string *boardId*, string *option*) | Object | Returns an object of cards in a designated Trello board. https://developers.trello.com/reference#boardsboardidtest |
+| getBoardChecklistsUrl(string *boardId*) | string | Returns `/boards/[Board ID]/checklists` |
+| getBoardChecklists(string *boardId*) | Object | Returns an object of all checklists in a designated Trello board. https://developers.trello.com/reference#boardsboardidactions-3 |
+| getBoardListsUrl(string *boardId*) | string | Returns `/boards/[Board ID]/lists` |
+| getBoardLists(string *boardId*) | Object | Returns an object of all lists in a designated Trello board. https://developers.trello.com/reference#boardsboardidlists |
+| batchGet(Array *urls*) | Array | BATCH: Make multiple GET requests to the Trello API using `get***Url()` functions. KNOWN ISSUE: not compatible with URLs that have commas in their query params. See official document at https://developers.trello.com/reference#batch for workarounds. |
+| postCard(Object *queryParams*) | Object | Create Trello card. https://developers.trello.com/reference#cardsid-1 |
+| deleteCard(string *cardId*) | Object | Delete card. https://developers.trello.com/reference#delete-card |
+| errorMessage(Object *e*) | string | Standarized error message for this script, as used in try-catch |
