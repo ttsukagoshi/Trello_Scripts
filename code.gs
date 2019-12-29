@@ -1,227 +1,84 @@
-// params from script properties
-// File > Properties > Script Properties
-// 参考：スクリプトエディタの「ファイル」＞「プロジェクトのプロパティ」＞タブ「スクリプトのプロパティ」
-var scriptProperties = PropertiesService.getScriptProperties();
-var pUserName = scriptProperties.getProperty('userName');
-var pTrelloKey = scriptProperties.getProperty('trelloKey'); // Trello API Key
-var pTrelloToken = scriptProperties.getProperty('trelloToken'); // Trello API Token
+// Global variables
+var userLocale = Session.getActiveUserLocale(),
+    scriptProperties = PropertiesService.getScriptProperties(); // File > Properties > Script Properties
+// Update library properties
+TrelloScript.trelloKey = scriptProperties.getProperty('trelloKey'); // Trello API Key
+TrelloScript.trelloToken = scriptProperties.getProperty('trelloToken'); // Trello API Token
+var pTrelloKey = TrelloScript.trelloKey,
+    pTrelloToken = TrelloScript.trelloToken;
+TrelloScript.apiKeyToken = 'key=' + pTrelloKey + '&token=' + pTrelloToken;
+// Parameters from script properties
 var pBoardId = scriptProperties.getProperty('boardId');
 
-// Setting class 'Trello'
-// See official document at https://developers.trello.com/reference#introduction
-var Trello = {
-  // BASIC PARAMETERS
-  baseUrl: 'https://api.trello.com/1',
-  pKeyToken: function() {
-    var keyToken = 'key=' + pTrelloKey + '&token=' + pTrelloToken;
-    return keyToken;
-  },
+// Add to menu when spreadsheet is opened
+function onOpen(e) {
+  SpreadsheetApp.getUi()
+  .createMenu('Trello')
+  .addItem('Get Board Content', 'trelloReport')
+  .addSeparator()
+  .addItem('Key & Token', 'trelloShowKeyToken')
+  .addItem('Get My Board', 'trelloBoards')
+  .addSeparator()
+  .addItem('Delete Archived Cards', 'trelloDeleteArchivedCards')
+  .addToUi();
+}
+
+/*************************************************************************/
+// Menu Functions 
+/*************************************************************************/
+
+/**
+ * List the contents of a Trello board into a newly created Google Spreadsheet sheet
+ */
+function trelloReport(){
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
   
-  // HTTP REQUEST METHODS
-  get: function(url) {
-    var response = UrlFetchApp.fetch(url, {'method':'GET', 'muteHttpExceptions':false});
-    return response;
-  },
-  post: function(url) {
-    var response = UrlFetchApp.fetch(url, {'method':'POST', 'muteHttpExceptions':false});
-    return response;
-  },
-  tDelete: function(url) {
-    var response = UrlFetchApp.fetch(url, {'method':'DELETE', 'muteHttpExceptions':false});
-    return response;
-  },
+  // Get contents of Trello board
+  var boardId = pBoardId,
+      data = trelloData(boardId); // Details of trelloData function are described below
+  var boardName = data[0],
+      timestamp = data[1],
+      contents = data[2],
+      actions = data[3];
   
-  // FUNCTIONS
-  /**
-   * Function to return URL for getMyBoards
-   * @param {boolean} simple: if true, returns the partial URL for retrieving only board ID and name. Defaults to false.
-   * @return {string} uUrl: unique part of url for this GET call
-   */
-  getMyBoardsUrl: function(simple){
-    simple = simple || false;
-    var uUrl = '/members/me/boards';
-    if (simple === true) {
-      uUrl += '?fields=name';
-    }
-    return uUrl;
-  },
-  /**
-   * Retrieve details of the boards of the current user, as represented by the Trello API key and token
-   * @param {boolean} simple: if true, returns the partial URL for retrieving only board ID and name. Defaults to false.
-   * @return {object} myBoards: parsed JSON object showing details of the user's boards
-   */
-  getMyBoards: function(simple) {
-    simple = simple || false;
-    var delimiter = '?';
-    if (simple === true) {
-      delimiter = '&';
-    }
-    var extUrl = this.getMyBoardsUrl(simple) + delimiter + this.pKeyToken();
-    var url = this.baseUrl + extUrl;
-    try {
-      var myBoards = this.get(url);
-      myBoards = JSON.parse(myBoards);
-      return myBoards;
-    } catch(e) {
-      var error = errorMessage(e);
-      return error;
-    }
-  },
-  /**
-   * Function to return URL for getBoard
-   * @param {string} boardId: Trello Board ID
-   * @return {string} uUrl: unique part of url for this GET call
-   */
-  getBoardUrl: function(boardId){
-    var uUrl = '/boards/' + boardId;
-    return uUrl;
-  },
-  /**
-   * Retrieve details of a board
-   * @param {string} boardId: Trello Board ID
-   * @return {object} board: details of board
-   */
-  getBoard: function(boardId) {
-    var extUrl = this.getBoardUrl(boardId) + '?'  + this.pKeyToken();
-    var url = this.baseUrl + extUrl;
-    try {
-      var board = this.get(url);
-      board = JSON.parse(board);
-      return board;
-    } catch(e) {
-      var error = errorMessage(e);
-      return error;
-    }
-  },
-  /**
-   * Function to return URL for getCards.
-   * @param {string} boardId: Board ID of the target Trello board
-   * @param {string} option: 'all', 'closed', 'none', 'open', or 'visible'
-   * @return {string} uUrl: unique part of url for this GET call
-   */
-  getCardsUrl: function(boardId, option){
-    var uUrl = '/boards/' + boardId + '/cards/' + option;
-    return uUrl;
-  },
-  /**
-   * Returns an object of all cards in a designated Trello board
-   * @param {string} boardId: Board ID of the target Trello board
-   * @param {string} option: 'all', 'closed', 'none', 'open', or 'visible'
-   * @return {object} cards: cards in the targeted board
-   */
-  getCards: function(boardId, option){
-    var extUrl = this.getCardsUrl(boardId, option) + '?' + this.pKeyToken();
-    var url = this.baseUrl + extUrl;
-    try {
-      var cards = this.get(url);
-      cards = JSON.parse(cards);
-      return cards;
-    } catch(e) {
-      var error = errorMessage(e);
-      return error;
-    }
-  },
-  /**
-   * Function to return URL for getLists.
-   * @param {string} boardId: Board ID of the target Trello board
-   * @return {string} uUrl: unique part of url for this GET call
-   */
-  getListsUrl: function(boardId) {
-    var uUrl = '/boards/' + boardId + '/lists';
-    return uUrl;
-  },
-  /**
-   * Returns an object of all lists in a designated Trello board
-   * @param {string} boardId: Board ID of the target Trello board
-   * @return {object} lists: cards in the targeted board
-   */
-  getLists: function(boardId) {
-    var extUrl = this.getListsUrl(boardId) + '?' + this.pKeyToken();
-    var url = this.baseUrl + extUrl;
-    try {
-      var lists = this.get(url);
-      lists = JSON.parse(lists);
-      return lists;
-    } catch(e) {
-      var error = errorMessage(e);
-      return error;
-    }
-  },
-  /**
-   * BATCH: Make multiple GET requests to the Trello API using this.get***Url() functions
-   * KNOWN ISSUE: not compatible with URLs that have commas in their query params
-   * See official document at https://developers.trello.com/reference#batch for workarounds
-   * @param {array} urls: array of GET request URLs in form of this.get***Url functions
-   * @return {object} responses: array of objects in line with the order of request URLs in urls
-   */
-  batchGet: function(urls) {
-    var encodedUrls = encodeURIComponent(urls.join());
-    var url = this.baseUrl + '/batch/?urls=' + encodedUrls + '&' + this.pKeyToken();
-    try {
-      var responses = this.get(url);
-      responses = JSON.parse(responses);
-      return responses;
-    } catch(e) {
-      var error = errorMessage(e);
-      return error;
-    }
-  },
-  /**
-   * Create Trello card
-   * @param {object} queryParams: object in form of {[query params1]=[parameter1],[query params2]=[parameter2], ...}
-   * See https://developers.trello.com/reference#cardsid-1 for full details of available query params.
-   * @return {object} createdCard: parsed JSON object with the details of the card created
-   */
-  postCard: function(queryParams) {
-    var queryKeys = queryParams.keys();
-    var extUrl = '?';
-    for (var i = 0; i < queryKeys.length; i++) {
-      var key = queryKeys[i];
-      var value = queryParams[key];
-      var keyValue = key + '=' + value + '&';
-      extUrl += keyValue;
-    }
-    var url = this.baseUrl + '/cards' + extUrl + this.pKeyToken();
-    try {
-      var createdCard = this.post(url);
-      createdCard = JSON.parse(createdCard);
-      return createdCard;
-    } catch(e) {
-      var error = errorMessage(e);
-      return error;
-    }
-  },
-  /**
-   * Delete card
-   * @param {string} cardId: Trello card ID
-   * @return {object} deleted: result of DELETE
-   */
-  deleteCard: function(cardId) {
-    var url = this.baseUrl + '/cards/' + cardId + '?'  + this.pKeyToken();
-    try {
-      var deleted = this.tDelete(url);
-      deleted = JSON.parse(deleted);
-      return deleted;
-    } catch(e) {
-      var error = errorMessage(e);
-      return error;
-    }
-  }
+  // Sheet Name(s)
+  var timestampName = Utilities.formatDate(timestamp, timeZone, 'yyyyMMddHHmmss');
+  var contentsSheetName = 'TrelloReport' + timestampName + '_content';
+  var actionsSheetName = 'TrelloReport' + timestampName + '_actions';
+  
+  var dataSet = [
+    {'sheetName' : contentsSheetName, 'sheetData' : contents},
+    {'sheetName' : actionsSheetName, 'sheetData' : actions}
+    ];
+  var createdSheets = createSheets(ss, dataSet, 'Trello Board Name: ' + boardName, timestamp);
+}
+
+/*************************************************************************/
+
+/**
+ * Show Trello Key & Token on alert window. Useful for making test requests on Trello Developers website.
+ */
+function trelloShowKeyToken(){
+  var ui = SpreadsheetApp.getUi(),
+      alertMessage = 'Handle with care!!!\n\nKey: ' + pTrelloKey + '\nToken: ' + pTrelloToken;
+  ui.alert(alertMessage);
 }
 
 /**
  * Get the IDs of the Trello boards that are available to the current user, as represented by the Trello API key and token.
  */
 function trelloBoards(){
-  var ui = SpreadsheetApp.getUi();
-  var simple = true;
-  var myBoards = Trello.getMyBoards(simple);
-  var alertMessage = [];
+  var ui = SpreadsheetApp.getUi(),
+      simple = true,
+      alertMessage = [];
+  // Get board information in simple form (only name and ID)
+  var myBoards = TrelloScript.getMyBoards(simple);
+  
   alertMessage.push('Board ID/Name: ')
   
   for (var i = 0; i < myBoards.length; i++) {
-    var myBoard = myBoards[i];
-    var text = myBoard.name + ' / ' + myBoard.id;
+    var myBoard = myBoards[i],
+        text = myBoard.name + ' / ' + myBoard.id;
     alertMessage.push(text);
   }
   
@@ -229,121 +86,41 @@ function trelloBoards(){
   ui.alert(alertMessage);
 }
 
-/**
- * List the contents of a Trello board into a newly created Google Spreadsheet sheet
- */
-function trelloReport(){
-  // Get contents of Trello board
-  var boardId = pBoardId;
-  var getBoardUrl = Trello.getBoardUrl(boardId);
-  var getCardsUrl = Trello.getCardsUrl(boardId,'all');
-  var getListsUrl = Trello.getListsUrl(boardId);
-  var urls = [getBoardUrl, getCardsUrl, getListsUrl];
-  var responses = Trello.batchGet(urls);
-  var board = responses[0]['200']; // HTTP Response header 200 for valid request
-  var cards = responses[1]['200']; // HTTP Response header 200 for valid request
-  var lists = responses[2]['200']; // HTTP Response header 200 for valid request
-  
-  // Board information
-  var boardName = board.name;
-  var boardLabels = board.labelNames;
-  // Object for list ID and list name in the board
-  var listsIdName = {};
-  for (var i = 0; i < lists.length; i++) {
-    var ilist = lists[i];
-    var ilistId = ilist.id;
-    var ilistName = ilist.name;
-    listsIdName[ilistId] = ilistName;
-  }
-  
-  // Objects to enter into spreadsheet
-  // var cardParams = Trello.cardParams();
-  var header = [];
-  var data = [];
-  header[0] = ['cardId', 'cardName', 'cardClosed', 'dateLastActivity', 'cardDesc', 'due', 'dueComplete', 'listName', 'labelNames', 'cardShortUrl']; // Must be in line with the below {object} data
-  
-  // Convert contents of {object}cards into array
-  for (i = 0; i < cards.length; i++) {
-    var card = cards[i];
-    var cardId = card.id;
-    var cardClosed = card.closed;
-    var dateLastActivity = card.dateLastActivity;
-    var cardDesc = card.desc;
-    var due = card.due;
-    var dueComplete = card.dueComplete;
-    var idAttachmentCover = card.idAttachmentCover;
-    var idChecklists = card.idChecklists;
-    var idList = card.idList;
-    var cardLabels= card.labels;
-    var cardName = card.name;
-    var cardShortUrl = card.shortUrl;
-    
-    // Format params
-    // dateLastActivity
-    if (dateLastActivity !== null) {
-      dateLastActivity = stDate(dateLastActivity);
-    }
-    // due
-    if (due !== null) {
-      due = stDate(due);
-    }
-    // listName
-    var listName = listsIdName[idList];
-    // labelNames
-    var labelNames = [];
-    for (var j = 0; j < cardLabels.length; j++) {
-      var label = cardLabels[j];
-      labelNames.push(label.name);
-    }
-    labelNames = labelNames.join(', ');
-    
-    data[i] = [cardId, cardName, cardClosed, dateLastActivity, cardDesc, due, dueComplete, listName, labelNames, cardShortUrl];
-  }
- 
-  // Create a new sheet in this Google Spreadsheet
-  var now = Utilities.formatDate(new Date(), timeZone, 'yyyyMMddHHmmss');
-  var sheetName = 'TrelloReport' + now;
-  
-  var reportSS = SpreadsheetApp.getActiveSpreadsheet();
-  var reportSheet = reportSS.insertSheet(sheetName, 0); // Insert new sheet at the left-most position (<- sheetIndex = 0)
-  var sheetTitle = reportSheet.getRange(1,1).setValue('Trello Board Name: ' + boardName);
-  var sheetHeader = reportSheet.getRange(3,1,1,header[0].length).setValues(header);
-  var reportData = reportSheet.getRange(4,1,data.length,header[0].length).setValues(data);
-}
-
+/*************************************************************************/
 
 /**
  * Bulk delete all archived cards in a designated Trello board
  * NOTE: CANNOT BE UNDONE!!!
  */
-function deleteArchivedCards() {
+function trelloDeleteArchivedCards() {
   // set counters to avoid hitting Trello API rate limits
-  /* Reference: https://developers.trello.com/docs/rate-limits
+  /**
+   * Reference: https://developers.trello.com/docs/rate-limits
    * To help prevent strain on Trello’s servers, our API imposes rate limits per API key for all issued tokens. There is a limit of
    * 300 requests per 10 seconds for each API key and 
    * 100 requests per 10 seconds interval for each token.
-  */
-  var rateLimit = 100;
-  var interval = 10 * 1000 // in milliseconds
-  var counter = 0;
+   */
+  var rateLimit = 100,
+      interval = ( 10 * 1000 ), // in milliseconds
+      counter = 0;
   
   // Log of all deleted cards
   var logDeleted = [];
   
   // Getting target board and card information
-  var boardId = pBoardId;
-  var getBoardUrl = Trello.getBoardUrl(boardId);
-  var getCardsUrl = Trello.getCardsUrl(boardId,'closed');
-  var urls = [getBoardUrl, getCardsUrl];
-  var responses = Trello.batchGet(urls);
-  var board = responses[0]['200']; // HTTP Response header 200 for valid request
-  var cards = responses[1]['200']; // HTTP Response header 200 for valid request
+  var boardId = pBoardId,
+      getBoardUrl = TrelloScript.getBoardUrl(boardId),
+      getBoardCardsUrl = TrelloScript.getBoardCardsUrl(boardId,'closed'),
+      urls = [getBoardUrl, getBoardCardsUrl],
+      responses = TrelloScript.batchGet(urls),
+      board = responses[0]['200'], // HTTP Response header 200 for valid request
+      cards = responses[1]['200']; // HTTP Response header 200 for valid request
   
   var boardName = board.name;
   
   // Prompt Message
-  var ui = SpreadsheetApp.getUi();
-  var promptMessage = 'You are about to delete all archived cards in Trello board \"' + boardName + '\." This action CANNOT BE UNDONE. To continue, enter name of target board for confirmation:';
+  var ui = SpreadsheetApp.getUi(),
+      promptMessage = 'You are about to delete all archived cards in Trello board \"' + boardName + '\." This action CANNOT BE UNDONE. To continue, enter name of target board for confirmation:';
   if (userLocale === 'ja') {
     promptMessage = 'Trelloボード名「' + boardName + '」内でアーカイブされた全てのカードを削除しようとしています。この操作は元に戻せません。\n続けるには、確認のために対象ボード名を入力してください。';
   }
@@ -356,10 +133,10 @@ function deleteArchivedCards() {
       throw new Error('Board name does not match / ボード名が一致しません');
     }
     for (var i = 0; i < cards.length; i++) {
-      var card = cards[i];
-      var cardId = card.id;
-      var cardName = card.name;
-      var deleted = Trello.deleteCard(cardId);
+      var card = cards[i],
+          cardId = card.id,
+          cardName = card.name,
+          deleted = TrelloScript.deleteCard(cardId);
       logDeleted.push( 'Card ID: ' + cardId + ' / Card Name: ' + cardName);
       counter += 1;
       if (counter == rateLimit - 10) { // rateLimit minus 10 for a safe margin
@@ -370,16 +147,162 @@ function deleteArchivedCards() {
     logDeleted = logDeleted.join('\n');
     ui.alert('Archived cards deleted / アーカイブされたカードが削除されました', logDeleted, ui.ButtonSet.OK);
   } catch(e) {
-    var error = 'Canceled \n\n' + errorMessage(e);
+    var error = 'Canceled \n\n' + TrelloScript.errorMessage(e);
     ui.alert(error);
   }
 }
 
+/*************************************************************************/
+// Background Functions 
+/*************************************************************************/
+
 /**
- * Show Trello Key & Token on alert window. Useful for making test requests on Trello Developers website.
+ * Get contents of a Trello board, i.e., board name, full list of cards in the board, and actions.
+ * 
+ * @param {string} boardId
+ * @return {object} data - array of board data in form of [{string}boardName, {Date}timestamp, {Object}contents, {Object}actions]
  */
-function showKeyToken(){
-  var ui = SpreadsheetApp.getUi();
-  var alertMessage = 'Key: ' + pTrelloKey + '\nToken: ' + pTrelloToken + '\nHandle with care!!!';
-  ui.alert(alertMessage);
+function trelloData(boardId){
+  // timestamp
+  var timestamp = new Date();
+  
+  // Get contents of Trello board
+  var getBoardUrl = TrelloScript.getBoardUrl(boardId),
+      getBoardCardsUrl = TrelloScript.getBoardCardsUrl(boardId,'all'),
+      getBoardChecklistsUrl = TrelloScript.getBoardChecklistsUrl(boardId),
+      getBoardListsUrl = TrelloScript.getBoardListsUrl(boardId),
+      getBoardActionsUrl = TrelloScript.getBoardActionsUrl(boardId);
+  var urls = [getBoardUrl, getBoardCardsUrl, getBoardChecklistsUrl, getBoardListsUrl, getBoardActionsUrl];
+  var responses = TrelloScript.batchGet(urls);
+  var board = responses[0]['200'], // HTTP Response header 200 for valid request
+      cards = responses[1]['200'], // HTTP Response header 200 for valid request
+      checklists = responses[2]['200'], // HTTP Response header 200 for valid request
+      lists = responses[3]['200'], // HTTP Response header 200 for valid request
+      actions = responses[4]['200']; // HTTP Response header 200 for valid request
+  
+  // Board information
+  var boardName = board.name,
+      boardLabels = board.labelNames;
+  // Checklist index object of checklist ID, name, and checkItems object
+  var checklistIndex = {};
+  for (var i = 0; i < checklists.length; i++) {
+    var iChecklist = checklists[i];
+    var cId = iChecklist.id,
+        cName = iChecklist.name,
+        cItems = iChecklist.checkItems;
+    checklistIndex[cId] = [cName, cItems];
+  }
+  // List index object of list ID and name in the board
+  var listsIdName = {};
+  for (var i = 0; i < lists.length; i++) {
+    var ilist = lists[i];
+    var ilistId = ilist.id,
+        ilistName = ilist.name;
+    listsIdName[ilistId] = ilistName;
+  }
+  
+  // Objects to return
+  var contents = [],
+      actionsList = [];
+
+  // Convert contents of {object}cards into {array}content
+  for (var i = 0; i < cards.length; i++) {
+    var contentObj = {},
+        card = cards[i];
+    var cardId = card.id,
+        cardClosed = card.closed,
+        dateLastActivity = card.dateLastActivity,
+        cardDesc = card.desc,
+        due = card.due,
+        dueComplete = card.dueComplete,
+        idAttachmentCover = card.idAttachmentCover,
+        idChecklists = card.idChecklists,
+        idList = card.idList,
+        cardLabels= card.labels,
+        cardName = card.name,
+        cardShortUrl = card.shortUrl;
+    // Format params
+    // dateLastActivity
+    if (dateLastActivity !== null) {
+      dateLastActivity = stDate(dateLastActivity);
+    }
+    // due
+    if (due !== null) {
+      due = stDate(due);
+    }
+    // checklist(s) contents
+    var checklistsString = '';
+    if (idChecklists.length > 0) {
+      for (var j = 0; j < idChecklists.length; j++) {
+        var br = '',
+            idChecklist = idChecklists[j];
+        var checklist = checklistIndex[idChecklist];
+        if (j !== 0) {
+          br = '\n\n';
+        }
+        // checklist title
+        var checklistTitle = br + checklist[0]; // name of this checklist
+        checklistsString += checklistTitle;
+        // checklist item(s)
+        var checkItems = checklist[1];
+        for (var k = 0; k < checkItems.length; k++) {
+          var checkItem = checkItems[k];
+          var checkItemName = checkItem.name,
+              checkItemState = checkItem.state; // 'complete' or 'incomplete'
+          var checkItemText = '\n- ' + checkItemState + ': ' + checkItemName;
+          checklistsString += checkItemText;
+        }
+      }
+    }
+    // listName
+    var listName = listsIdName[idList];
+    // labelNames
+    var labelNames = [];
+    for (var j = 0; j < cardLabels.length; j++) {
+      var label = cardLabels[j];
+      labelNames.push(label.name);
+    }
+    labelNames = labelNames.join(', ');
+    
+    // define contents
+    contentObj['cardId'] = cardId;
+    contentObj['cardName'] = cardName;
+    contentObj['cardClosed'] = cardClosed;
+    contentObj['dateLastActivity'] = dateLastActivity;
+    contentObj['cardDesc'] = cardDesc;
+    contentObj['checklistsString'] = checklistsString;
+    contentObj['due'] = due;
+    contentObj['dueComplete'] = dueComplete;
+    contentObj['listName'] = listName;
+    contentObj['labelNames'] = labelNames;
+    contentObj['cardShortUrl'] = cardShortUrl;
+    
+    contents[i] = contentObj;
+  }
+  
+  // Convert contents of {object}actions into {array}actionsList
+  for (var i = 0; i < actions.length; i++) {
+    var actionsListObj = {},
+        action = actions[i];
+    var aActionDate = stDate(action.date),
+        aActionId = action.id,
+        aActionType = action.type,
+        aActionMemberCreatorId = action.memberCreator.id,
+        aActionMemberCreatorUsername = action.memberCreator.username,
+        aActionMemberCreatorFullName = action.memberCreator.fullName,
+        aActionData = JSON.stringify(action.data);
+       
+    actionsListObj['aActionDate'] = aActionDate;
+    actionsListObj['aActionId'] = aActionId;
+    actionsListObj['aActionType'] = aActionType;
+    actionsListObj['aActionData'] = aActionData;
+    actionsListObj['aActionMemberCreatorId'] = aActionMemberCreatorId;
+    actionsListObj['aActionMemberCreatorUsername'] = aActionMemberCreatorUsername;
+    actionsListObj['aActionMemberCreatorFullName'] = aActionMemberCreatorFullName;
+    
+    actionsList[i] = actionsListObj;
+  }
+  
+  var data = [boardName, timestamp, contents, actionsList];
+  return data;
 }
