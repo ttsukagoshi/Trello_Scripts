@@ -79,6 +79,34 @@ function getMyBoards(simple) {
 }
 
 /**
+ * Function to return URL for getMyUserData
+ * @return {string} uUrl - unique part of url for this GET call
+ */
+function getMyUserDataUrl() {
+  var uUrl = '/members/me?fields=all';
+  return uUrl;
+}
+
+/**
+ * Retrieve details of the current user, as represented by the Trello API key and token
+ * https://developers.trello.com/reference#membersid
+ * 
+ * @return {Object} myUserData - parsed JSON object showing details of the user's boards
+ */
+function getMyUserData() {
+  var extUrl = getMyUserDataUrl() + '&'  + apiKeyToken;
+  var url = baseUrl + extUrl;
+  try {
+    var myUserData = get(url);
+    myUserData = JSON.parse(myUserData);
+    return myUserData;
+  } catch(e) {
+    var error = errorMessage(e);
+    return error;
+  }
+}
+
+/**
  * Function to return URL for getBoard
  * @param {string} boardId - Trello Board ID
  * @return {string} uUrl - unique part of url for this GET call
@@ -146,7 +174,7 @@ function getBoardActions(boardId){
  * @return {string} uUrl - unique part of url for this GET call
  */
 function getBoardCardsUrl(boardId, option){
-  var uUrl = '/boards/' + boardId + '/cards/' + option;
+  var uUrl = '/boards/' + boardId + '/cards/' + option + '?attachments=true';
   return uUrl;
 }
 
@@ -159,7 +187,7 @@ function getBoardCardsUrl(boardId, option){
  * @return {Object} cards - cards in the targeted board
  */
 function getBoardCards(boardId, option){
-  var extUrl = getBoardCardsUrl(boardId, option) + '?' + apiKeyToken;
+  var extUrl = getBoardCardsUrl(boardId, option) + '&' + apiKeyToken;
   var url = baseUrl + extUrl;
   try {
     var cards = get(url);
@@ -235,8 +263,8 @@ function getBoardLists(boardId) {
  * BATCH: Make multiple GET requests to the Trello API using get***Url() functions
  * KNOWN ISSUE: not compatible with URLs that have commas in their query params
  * See official document at https://developers.trello.com/reference#batch for workarounds
- * @param {Object} urls - One-dimensional array of GET request URLs in form of get***Url functions
- * @return {Object} responses - array of objects in line with the order of request URLs in urls
+ * @param {Array} urls - One-dimensional array of GET request URLs in form of get***Url functions
+ * @return {Array} responses - array of objects in line with the order of request URLs in urls
  */
 function batchGet(urls) {
   var encodedUrls = encodeURIComponent(urls.join());

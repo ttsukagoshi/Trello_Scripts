@@ -34,6 +34,8 @@ TrelloScript.apiKeyToken = 'key=' + myApiKey + '&token=' + myApiToken`;
 | tDelete(string *url*) | JSON object | Makes a HTTP DELETE request to the *url*. |
 | getMyBoardsUrl(boolean *simple*) | string | Returns `/members/me/boards` or if `simple === true`, `/members/me/boards?fields=name`|
 | getMyBoards(boolean *simple*) | Object | Retrieve details of the boards of the current user, as represented by the Trello API key and token. https://developers.trello.com/reference#membersidboards |
+| getMyUserDataUrl() | string | Returns `/members/me?fields=all` |
+| getMyUserData() | Object | Retrieve details of the current user, as represented by the Trello API key and token. https://developers.trello.com/reference#membersid |
 | getBoardUrl(string *boardId*) | string | Returns `/boards/[Board ID]` |
 | getBoard(string *boardId*) | Object | Retrieve details of a board. https://developers.trello.com/reference#boardsboardid-1 |
 | getBoardActionsUrl(string *boardId*) | string | Returns `/boards/[Board ID]/actions?limit=1000` |
