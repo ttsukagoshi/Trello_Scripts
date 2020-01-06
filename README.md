@@ -4,13 +4,18 @@
 Google App Scripts to manage Trello using its API and Google Spreadsheet.  
 
 ## Content
-- code.gs: Primary file with the main codes written. To be used as a spreadsheet-bound script.
-- common.gs: Some common functions.
+- code.gs: `[Required]`Primary file with the main codes written. To be used as a spreadsheet-bound script.
+- common.gs: `[Required]`Some common functions.
+- trelloBackup.gs: `[Optional]`Script to create a full backup of all available Trello boards including actions and attachments
 - TrelloScriptLibrary.gs: Code for the Google App Script library *Trello Script* which is used in **code.gs**.
 
 ## Scope of Authentications (OAuth Scripts required for this script)
 - Connect to an external service: https://www.googleapis.com/auth/script.external_request
 - See, edit, create, and delete your spreadsheets in Google Drive: https://www.googleapis.com/auth/spreadsheets
+
+### Additional OAuth scopes when using trelloBackup.gs
+- Send email as you: https://www.googleapis.com/auth/script.send_mail
+- See, edit, create, and delete all of your Google Drive files: https://www.googleapis.com/auth/drive
 
 ## Prepare
 1. Create a new Google Spreadsheet (or use an existing Spreadsheet).
