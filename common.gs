@@ -11,13 +11,13 @@ function stDate(dateString) {
 }
 
 /**
- * Create Google Spreadsheet sheet(s) from set(s) of header(s) and value(s)
+ * Create Google Spreadsheet sheet(s) from set(s) of header and value
  * 
  * @param {Object} spreadsheet - Spreadsheet object to create sheet on 
  * @param {Array} dataSet - Array of formatted object containing data object(s) which should be in form of 
  * [
- *     {'sheetName':{string}'sheetName0', 'sheetData':{Object}dataObject0},
- *     {'sheetName':{string}'sheetName1', 'sheetData':{Object}dataObject1},...
+ *     {'sheetName':{string}'sheetName0', 'sheetData':{Array}dataObject0},
+ *     {'sheetName':{string}'sheetName1', 'sheetData':{Array}dataObject1},...
  * ]
  * @param {string} prefix - Optional. Prefix to be added to title of each sheet.
  * @param {Date} timestamp - Optional. Timestamp of dataSet; defaults to the time when script is executed.
@@ -36,19 +36,26 @@ function createSheets(spreadsheet, dataSet, prefix, timestamp) {
         sheetTitle = prefix + ' - ' + sheetName + ' as of ' + Utilities.formatDate(timestamp, timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX");
     var sheet = spreadsheet.insertSheet(sheetName, i); // Insert new sheet to spreadsheet
     
-    // Breakdown object sheetData into its header and values; see function breakdownObject for details
-    var sheetDataElem = breakdownObject(sheetData);
-    var sheetDataHeader = sheetDataElem[0], // note that sheetDataHeader is already a two-dimensional array
-        sheetDataValues = sheetDataElem[1];
+    // Enter sheet title
+    sheet.getRange(1, 1).setValue(sheetTitle);
     
-    // Enter into sheet
-    sheet.getRange(1, 1).setValue(sheetTitle); // Title
-    sheet.getRange(3, 1, 1, sheetDataHeader[0].length).setValues(sheetDataHeader); // Header
-    sheet.getRange(4, 1, sheetDataValues.length, sheetDataHeader[0].length).setValues(sheetDataValues); // Values
+    if (sheetData.length == 0) {
+      sheet.getRange(3, 1).setValue('No Data Available'); // Header Message
+    } else {
+      // Breakdown object sheetData into its header and values; see function breakdownObject for details
+      var sheetDataElem = breakdownObject(sheetData);
+      var sheetDataHeader = sheetDataElem[0], // note that sheetDataHeader is already a two-dimensional array
+          sheetDataValues = sheetDataElem[1];
+      
+      // Enter into sheet
+      sheet.getRange(3, 1, 1, sheetDataHeader[0].length).setValues(sheetDataHeader); // Header
+      sheet.getRange(4, 1, sheetDataValues.length, sheetDataHeader[0].length).setValues(sheetDataValues); // Values
+    }
     
     createdSheet[sheet.getSheetId()] = sheetName;
     createdSheets.push(createdSheet);
   }
+  return createdSheets;
 }
 
 /**
@@ -75,4 +82,20 @@ function breakdownObject(data) {
   }
   var output = [header, values];
   return output;
+}
+
+/**
+ * Delete all sheets in this spreadsheet except for the designated sheet ID
+ * @param {string} exceptionSheetId - sheet ID to not delete
+ */
+function deleteSheets(exceptionSheetId) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheets = ss.getSheets();
+  for (var i = 0; i < sheets.length; i++) {
+    var sheet = sheets[i];
+    if (sheet.getSheetId() == exceptionSheetId) {
+      continue;
+    }
+    ss.deleteSheet(sheet);
+  } 
 }
