@@ -4,6 +4,7 @@
  * See, edit, create, and delete all of your Google Drive files: https://www.googleapis.com/auth/drive
  */
 
+var thisSpreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
 
 // Additional script properties as global variables
 // For more details, see https://github.com/ttsukagoshi/Trello_Scripts/blob/master/README.md
@@ -106,20 +107,23 @@ function trelloBackup() {
     var mailSubject = 'Complete: Trello Backup for ' + stDate(now);
     var mailBody = 'A complete backup of Trello Boards for ' + username + ' as of '+ stDate(now) + ' has been created at\n'
       + backupFolderUrl + '\n'
-      + 'Script execution time: ' + exeTime + '\n'
-      + 'For script details, see https://github.com/ttsukagoshi/Trello_Scripts';
+      + 'Script execution time: ' + exeTime + '\n\n'
+      + 'This script is run on the following Google Spreadsheet: ' + thisSpreadsheetUrl + '\n'
+      + 'For details of this script, see https://github.com/ttsukagoshi/Trello_Scripts';
     if (userLocale === 'ja') {
       mailSubject = '完了：Trelloバックアップ ' + stDate(now);
       mailBody = 'ユーザ「' + username + '」のTrelloボード一式のバックアップが完了しました。（'+ stDate(now) + '時点）\n'
       + backupFolderUrl + '\n'
-      + 'スクリプト実行時間: ' + exeTime + '\n'
-      + 'スクリプトの詳細については、次のURLをご参照ください:\nhttps://github.com/ttsukagoshi/Trello_Scripts';
+      + 'スクリプト実行時間: ' + exeTime + '\n\n'
+      + 'このスクリプトは、次のGoogle Spreadsheet上で実行されています: ' + thisSpreadsheetUrl + '\n'
+      + 'スクリプトの詳細については、次のURLをご参照ください: https://github.com/ttsukagoshi/Trello_Scripts';
     }
     MailApp.sendEmail(myEmail, mailSubject, mailBody);
   } catch (e) {
     var errorTo = Session.getActiveUser().getEmail();
+    var referTo = thisSpreadsheetUrl;
     var errorNow = new Date();
-    var errorText = TrelloScript.errorMessage(e);
+    var errorText = TrelloScript.errorMessage(e) + '\n\nCheck script at ' + thisSpreadsheetUrl;
     MailApp.sendEmail(errorTo, 'Trello Backup Error: ' + stDate(errorNow), errorText);
   }
 }
