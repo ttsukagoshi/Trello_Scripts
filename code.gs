@@ -231,8 +231,8 @@ function trelloData(boardId){
   }
   // List index object of list ID and name in the board
   var listsIdName = {};
-  for (var i = 0; i < lists.length; i++) {
-    var ilist = lists[i];
+  for (var k = 0; k < lists.length; k++) {
+    var ilist = lists[k];
     var ilistId = ilist.id,
         ilistName = ilist.name;
     listsIdName[ilistId] = ilistName;
