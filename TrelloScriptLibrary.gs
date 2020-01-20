@@ -3,12 +3,13 @@
  * For details, go to https://github.com/ttsukagoshi/Trello_Scripts/
  */
 
-// Global vars
+// Properties
 var baseUrl = 'https://api.trello.com/1',
     trelloKey = 'apiKey', // to be declared at individual scripts
     trelloToken = 'apiToken', // to be declared at individual scripts
     apiKeyToken = 'key=apiKey&token=apiToken'; // to be declared at individual scripts
 
+// Methods
 /**
  * GET request
  * @param {string} url
