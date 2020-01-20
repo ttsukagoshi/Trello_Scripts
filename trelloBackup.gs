@@ -74,13 +74,14 @@ function trelloBackup() {
       
       for (var j = 0; j < myBoardAttachments.length; j++) {
         var attachment = myBoardAttachments[j];
-        var attachmentsNum = attachment.attachmentsNum,
-            cardAttachmentName = attachment.cardAttachmentName,
-            cardAttachmentUrl = attachment.cardAttachmentUrl;
-        var fileName = attachmentsNum + '_' + cardAttachmentName;
+        var attachmentsNum = attachment.attachmentsNum;
+        var cardAttachmentName = attachment.cardAttachmentName;
+        var cardAttachmentUrl = attachment.cardAttachmentUrl;
         if (cardAttachmentUrl.substring(0, filterUrlLength) !== filterUrl) {
           continue
         } else {
+          var fileExt = cardAttachmentUrl.slice(cardAttachmentUrl.lastIndexOf('.') - cardAttachmentUrl.length);
+          var fileName = attachmentsNum + '_' + cardAttachmentName + fileExt;
           attachment['fileName'] = fileName;
           downloadList.push(attachment);
           downloadListUrls.push(cardAttachmentUrl);
@@ -121,7 +122,6 @@ function trelloBackup() {
     MailApp.sendEmail(myEmail, mailSubject, mailBody);
   } catch (e) {
     var errorTo = Session.getActiveUser().getEmail();
-    var referTo = thisSpreadsheetUrl;
     var errorNow = new Date();
     var errorText = TrelloScript.errorMessage(e) + '\n\nCheck script at ' + thisSpreadsheetUrl;
     MailApp.sendEmail(errorTo, 'Trello Backup Error: ' + stDate(errorNow), errorText);
