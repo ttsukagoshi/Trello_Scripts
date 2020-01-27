@@ -5,15 +5,14 @@ Google App Scripts to manage Trello using its API and Google Spreadsheet.
 
 ## Content
 - code.gs: `[Required]`Primary file with the main codes written. To be used as a spreadsheet-bound script.
-- common.gs: `[Required]`Script of some general functions.
-- trelloBackup.gs: `[Optional]`Script to create a full backup of all available Trello boards including actions and attachments. Requires [additional authentications as mentioned below](https://github.com/ttsukagoshi/Trello_Scripts#additional-oauth-scopes-when-using-trellobackupgs).
+- backup.gs: `[Optional]`Script to create a full backup of all available Trello boards including actions and attachments. Requires [additional authentications as mentioned below](https://github.com/ttsukagoshi/Trello_Scripts#additional-oauth-scopes-when-using-trellobackupgs).
 - TrelloScriptLibrary.gs: Code for the Google App Script library *Trello Script* used in **code.gs**.
 
 ## Scope of Authentications (OAuth required for this script)
 - Connect to an external service: https://www.googleapis.com/auth/script.external_request
 - See, edit, create, and delete your spreadsheets in Google Drive: https://www.googleapis.com/auth/spreadsheets
 
-### Additional OAuth Scopes when Using trelloBackup.gs
+### Additional OAuth Scopes when Using backup.gs
 - Send email as you: https://www.googleapis.com/auth/script.send_mail
 - See, edit, create, and delete all of your Google Drive files: https://www.googleapis.com/auth/drive
 
@@ -46,15 +45,14 @@ GASとGoogleスプレッドシートを使ってTrelloを管理する。
 
 ## 内容
 - code.gs: `[必須]`主要なコードが書かれたファイル。スプレッドシートにコンテナバインドされたスクリプトとして使用。
-- common.gs: `[必須]`一般化されたいくつかの関数が入ったスクリプト。
-- trelloBackup.gs: `[任意]`アクセス可能な全てのTrelloボードをGoogle Driveにバックアップするためのスクリプト。
+- backup.gs: `[任意]`アクセス可能な全てのTrelloボードをGoogle Driveにバックアップするためのスクリプト。
 - TrelloScriptLibrary.gs: **code.gs**で使用するGoogle App Scriptライブラリ「*Trello Script*」のコード
 
 ## 認証のスコープ （このスクリプトを実行するのに必要なOAuth）
 - Connect to an external service: https://www.googleapis.com/auth/script.external_request
 - See, edit, create, and delete your spreadsheets in Google Drive: https://www.googleapis.com/auth/spreadsheets
 
-### trelloBackup.gsを使用する際に必要となる追加認証
+### backup.gsを使用する際に必要となる追加認証
 - Send email as you: https://www.googleapis.com/auth/script.send_mail
 - See, edit, create, and delete all of your Google Drive files: https://www.googleapis.com/auth/drive
 
