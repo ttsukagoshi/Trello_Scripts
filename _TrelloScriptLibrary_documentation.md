@@ -1,7 +1,7 @@
 日本語は準備中
 
 # Properties and Methods in *TrelloScript* Library
-See **TrelloScriptLibrary.gs** for actual code.  
+See **_TrelloScriptLibrary.gs** for actual code.  
 See [the official documentation](https://developers.trello.com/) for detailed description.
 
 ## Properties
