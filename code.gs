@@ -1,33 +1,44 @@
-// Global variables
-var userLocale = Session.getActiveUserLocale(),
-    scriptProperties = PropertiesService.getScriptProperties(); // File > Properties > Script Properties
+/*************************************************************************/
+// Global Variables
+/*************************************************************************/
+var scriptProperties = PropertiesService.getScriptProperties(); // File > Properties > Script Properties
 // Update library properties
 TrelloScript.trelloKey = scriptProperties.getProperty('trelloKey'); // Trello API Key
 TrelloScript.trelloToken = scriptProperties.getProperty('trelloToken'); // Trello API Token
-var pTrelloKey = TrelloScript.trelloKey,
-    pTrelloToken = TrelloScript.trelloToken;
+var pTrelloKey = TrelloScript.trelloKey;
+var pTrelloToken = TrelloScript.trelloToken;
 TrelloScript.apiKeyToken = 'key=' + pTrelloKey + '&token=' + pTrelloToken;
-// Parameters from script properties
-var pBoardId = scriptProperties.getProperty('boardId');
+// Parameter(s) from script properties
+var pBoardId = scriptProperties.getProperty('targetBoardId');
 
-// Add to menu when spreadsheet is opened
+var userLocale = Session.getActiveUserLocale();
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+var timeZone = ss.getSpreadsheetTimeZone();
+var ui = SpreadsheetApp.getUi();
+
+/*************************************************************************/
+// Spreadsheet Menu
+/*************************************************************************/
 function onOpen(e) {
-  SpreadsheetApp.getUi()
-  .createMenu('Trello')
-  .addItem('Get Board Content', 'trelloReport')
-  .addSeparator()
-  .addItem('Key & Token', 'trelloShowKeyToken')
-  .addItem('Get My Board', 'trelloBoards')
-  .addSeparator()
-  .addItem('Delete Archived Cards', 'trelloDeleteArchivedCards')
-  .addItem('Delete All Sheets', 'deleteAllSheets')
+  ui.createMenu('Trello')
+  .addSubMenu(ui.createMenu('Report')
+              .addItem('Board Content', 'trelloReport')
+              )
+  .addSubMenu(ui.createMenu('Settings')
+              .addItem('Key & Token', 'trelloShowKeyToken')
+              .addItem('My Boards & Lists', 'trelloBoardsLists')
+              .addItem('Set targetBoardId', 'setTargetBoardId')
+              )
+  .addSubMenu(ui.createMenu('Delete')
+              .addItem('Delete Archived Cards', 'trelloDeleteArchivedCards')
+              .addItem('Delete All Sheets', 'deleteAllSheets')
+             )  
   .addToUi();
 }
 
 /*************************************************************************/
 // Menu Functions 
 /*************************************************************************/
-
 /**
  * List the contents of a Trello board into a newly created Google Spreadsheet sheet
  */
@@ -36,13 +47,13 @@ function trelloReport(){
   var ui = SpreadsheetApp.getUi();
   
   // Get contents of Trello board
-  var boardId = pBoardId,
-      data = trelloData(boardId); // Details of trelloData function are described below
-  var boardName = data[0],
-      timestamp = data[1],
-      contents = data[2],
-      actions = data[3],
-      attachments = data[4];
+  var boardId = pBoardId;
+  var data = trelloData(boardId); // Details of trelloData function are described below
+  var boardName = data[0];
+  var timestamp = data[1];
+  var contents = data[2];
+  var actions = data[3];
+  var attachments = data[4];
   
   // Sheet Name(s)
   var timestampName = Utilities.formatDate(timestamp, timeZone, 'yyyyMMddHHmmss');
@@ -74,31 +85,90 @@ function trelloReport(){
  */
 function trelloShowKeyToken(){
   var username = TrelloScript.getMyUserData().username;
-  var ui = SpreadsheetApp.getUi(),
-      alertMessage = 'Handle with care!!!\n\nUsername: ' + username + '\nKey: ' + pTrelloKey + '\nToken: ' + pTrelloToken;
+  var ui = SpreadsheetApp.getUi();
+  var alertMessage = 'Handle with care!!!\n\nUsername: ' + username + '\nKey: ' + pTrelloKey + '\nToken: ' + pTrelloToken;
   ui.alert(alertMessage);
 }
 
 /**
- * Get the IDs of the Trello boards that are available to the current user, as represented by the Trello API key and token.
+ * Get the IDs of the Trello boards & its lists that are available to the current user, as represented by the Trello API key and token.
  */
-function trelloBoards(){
-  var ui = SpreadsheetApp.getUi(),
-      simple = true,
-      alertMessage = [];
-  // Get board information in simple form (only name and ID)
-  var myBoards = TrelloScript.getMyBoards(simple);
-  
-  alertMessage.push('Board ID/Name: ')
-  
-  for (var i = 0; i < myBoards.length; i++) {
-    var myBoard = myBoards[i],
-        text = myBoard.name + ' / ' + myBoard.id;
-    alertMessage.push(text);
+function trelloBoardsLists(){
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ui = SpreadsheetApp.getUi();
+  var simple = true;
+  var boardList = [];
+
+  try {
+    // Get board information in simple form (only name and ID)
+    var boards = TrelloScript.getMyBoards(simple);
+    
+    // Throw exception if no board is available
+    if (boards.length < 1) {
+      throw new Error('No board available.');
+    }
+    
+    // Create array 'boardList' comprising objects 'boardListObj'
+    for (var i = 0; i < boards.length; i++) {
+      var boardListObj = {};
+      var boardId = boards[i].id;
+      var boardName = boards[i].name;
+      
+      // Get list of Trello lists for every board
+      var lists = TrelloScript.getBoardLists(boardId);
+      var listId = 'NA';
+      var listName = 'NA';
+      
+      // Skip loop if no list is available in this board 
+      if (lists.length < 1) {
+        boardListObj = {
+          'boardId' : boardId,
+          'boardName' : boardName,
+          'listId' : listId,
+          'listName' : listName
+        };
+        boardList.push(boardListObj);
+      } else {  
+        for (var j = 0; j < lists.length; j++) {
+          boardListObj = {};
+          var list = lists[j];
+          listId = list.id;
+          listName = list.name;
+          boardListObj = {
+            'boardId' : boardId,
+            'boardName' : boardName,
+            'listId' : listId,
+            'listName' : listName
+          };
+          boardList.push(boardListObj);
+        }
+      }
+    }
+    var dataSet = [{'sheetName':'Board_List', 'sheetData':boardList}];
+    var createdSheets = createSheets(ss, dataSet);
+    ui.alert('Sheet Created: List of all available Trello boards & its lists');
+  } catch(e) {
+    var logText = TrelloScript.errorMessage(e);
+    ui.alert(logText);
   }
+}
+
+/**
+ * Set script property 'targetBoardId' to the selected value.
+ */
+function setTargetBoardId() {
+  var ui = SpreadsheetApp.getUi();
+  var value = SpreadsheetApp.getActiveRange().getValue();
   
-  var alertMessageString = alertMessage.join('\n');
-  ui.alert(alertMessageString);
+  if (value == null || typeof value !== 'string') {
+    ui.alert('Select a proper value.');
+  } else {
+    var property = {
+      'targetBoardId' : value
+    };
+    scriptProperties.setProperties(property, false);
+    ui.alert('New targetBoardId set to ' + value);
+  }
 }
 
 /*************************************************************************/
@@ -173,7 +243,7 @@ function trelloDeleteArchivedCards() {
  */
 function deleteAllSheets() {
   var ui = SpreadsheetApp.getUi();
-  var exceptionSheetId = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('old→').getSheetId();
+  var exceptionSheetId = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Board_List').getSheetId();
   var confirmMessage = 'Are you sure you want to delete all sheets in this spreadsheet?';
   
   try {
@@ -375,4 +445,105 @@ function trelloData(boardId){
   
   var data = [boardName, timestamp, contents, actionsList, attachmentsList];
   return data;
+}
+
+/**
+ * Standarized date format for this project.
+ *
+ * @param {string} dateString
+ * @return {string} dateIso
+ */
+function stDate(dateString) {
+  var dateIso = Utilities.formatDate(new Date(dateString), timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+  return dateIso;
+}
+
+/**
+ * Create Google Spreadsheet sheet(s) from set(s) of header and value
+ * 
+ * @param {Object} spreadsheet - Spreadsheet object to create sheet on 
+ * @param {Array} dataSet - Array of formatted object containing data object(s) which should be in form of 
+ * [
+ *     {'sheetName':{string}'sheetName0', 'sheetData':{Array}dataObject0},
+ *     {'sheetName':{string}'sheetName1', 'sheetData':{Array}dataObject1},...
+ * ]
+ * @param {string} prefix - Optional. Prefix to be added to title of each sheet.
+ * @param {Date} timestamp - Optional. Timestamp of dataSet; defaults to the time when script is executed.
+ * @return {Array} createdSheets - Array of sheets created in form of [{sheetId0=sheetName0},{sheetId1=sheetName1}, ...]
+ */
+function createSheets(spreadsheet, dataSet, prefix, timestamp) {
+  prefix = prefix || '';
+  timestamp = timestamp || new Date();
+  var createdSheets = [];
+  
+  for (var i = 0; i < dataSet.length; i++) {
+    var createdSheet = {};
+    var dataObject = dataSet[i];
+    var sheetName = dataObject.sheetName,
+        sheetData = dataObject.sheetData,
+        sheetTitle = prefix + ' - ' + sheetName + ' as of ' + Utilities.formatDate(timestamp, timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+    var sheet = spreadsheet.insertSheet(sheetName, i); // Insert new sheet to spreadsheet
+    
+    // Enter sheet title
+    sheet.getRange(1, 1).setValue(sheetTitle);
+    
+    if (sheetData.length == 0) {
+      sheet.getRange(3, 1).setValue('No Data Available'); // Header Message
+    } else {
+      // Breakdown object sheetData into its header and values; see function breakdownObject for details
+      var sheetDataElem = breakdownObject(sheetData);
+      var sheetDataHeader = sheetDataElem[0], // note that sheetDataHeader is already a two-dimensional array
+          sheetDataValues = sheetDataElem[1];
+      
+      // Enter into sheet
+      sheet.getRange(3, 1, 1, sheetDataHeader[0].length).setValues(sheetDataHeader); // Header
+      sheet.getRange(4, 1, sheetDataValues.length, sheetDataHeader[0].length).setValues(sheetDataValues); // Values
+    }
+    
+    createdSheet[sheet.getSheetId()] = sheetName;
+    createdSheets.push(createdSheet);
+  }
+  return createdSheets;
+}
+
+/**
+ * Converts the input array of object into array of keys, i.e.,header, and its values
+ *
+ * @param {Array} data - array of objects
+ * @return {Array} output - array of [header, values], where header and values are both two-dimensional arrays
+ */
+function breakdownObject(data) {
+  var header = [],
+      values = [],
+      keys = Object.keys(data[0]),
+      key = '';
+  // define header
+  header[0] = keys;
+  // define values
+  for (var i = 0; i < data.length; i++) {
+    var datum = data[i];
+    values[i] = [];
+    for (var j = 0; j < keys.length; j++) {
+      key = keys[j];
+      values[i].push(datum[key]);
+    }
+  }
+  var output = [header, values];
+  return output;
+}
+
+/**
+ * Delete all sheets in this spreadsheet except for the designated sheet ID
+ * @param {string} exceptionSheetId - sheet ID to not delete
+ */
+function deleteSheets(exceptionSheetId) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheets = ss.getSheets();
+  for (var i = 0; i < sheets.length; i++) {
+    var sheet = sheets[i];
+    if (sheet.getSheetId() == exceptionSheetId) {
+      continue;
+    }
+    ss.deleteSheet(sheet);
+  } 
 }
