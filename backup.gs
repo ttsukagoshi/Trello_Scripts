@@ -12,9 +12,6 @@ var backupRootFolderId = scriptProperties.getProperty('backupRootFolderId');
 
 /**
  * Create a backup spreadsheet as a content list of all available boards
- *
- * @param {string} option - select how to handle the created backup spreadsheet: 'Email'
- * 
  */
 function trelloBackup() {
   var startScript = new Date();
@@ -80,7 +77,7 @@ function trelloBackup() {
         if (cardAttachmentUrl.substring(0, filterUrlLength) !== filterUrl) {
           continue
         } else {
-          var fileExt = cardAttachmentUrl.slice(cardAttachmentUrl.lastIndexOf('.') - cardAttachmentUrl.length);
+          var fileExt = cardAttachmentUrl.slice(cardAttachmentUrl.lastIndexOf('.') - cardAttachmentUrl.length); // Get file extension of attachment, e.g., '.pdf' from cardAttachmentUrl
           var fileName = attachmentsNum + '_' + cardAttachmentName + fileExt;
           attachment['fileName'] = fileName;
           downloadList.push(attachment);
