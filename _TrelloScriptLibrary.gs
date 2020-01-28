@@ -12,8 +12,9 @@ var baseUrl = 'https://api.trello.com/1',
 // Methods
 /**
  * GET request
+ *
  * @param {string} url
- * @return {Object} response - JSON format
+ * @return {String} response JSON-encoded string
  */
 function get(url) {
   var response = UrlFetchApp.fetch(url, {'method':'GET', 'muteHttpExceptions':false});
@@ -22,8 +23,9 @@ function get(url) {
 
 /**
  * POST request
+ *
  * @param {string} url
- * @return {Object} response - JSON format
+ * @return {String} response JSON-encoded string
  */
 function post(url) {
   var response = UrlFetchApp.fetch(url, {'method':'POST', 'muteHttpExceptions':false});
@@ -32,8 +34,9 @@ function post(url) {
 
 /**
  * DELETE request
+ *
  * @param {string} url
- * @return {Object} response - JSON format
+ * @return {String} response JSON-encoded string
  */
 function tDelete(url) {
   var response = UrlFetchApp.fetch(url, {'method':'DELETE', 'muteHttpExceptions':false});
@@ -42,8 +45,9 @@ function tDelete(url) {
 
 /**
  * Function to return URL for getMyBoards
- * @param {Boolean} simple - if true, returns the partial URL for retrieving only board ID and name. Defaults to false.
- * @return {string} uUrl - unique part of url for this GET call
+ *
+ * @param {Boolean} simple If true, returns the partial URL for retrieving only board ID and name. Defaults to false.
+ * @return {string} uUrl Unique part of url for this GET call
  */
 function getMyBoardsUrl(simple) {
   simple = simple || false;
@@ -58,8 +62,8 @@ function getMyBoardsUrl(simple) {
  * Retrieve details of the boards of the current user, as represented by the Trello API key and token
  * https://developers.trello.com/reference#membersidboards
  * 
- * @param {boolean} simple - if true, returns the partial URL for retrieving only board ID and name. Defaults to false.
- * @return {Object} myBoards - parsed JSON object showing details of the user's boards
+ * @param {boolean} simple If true, returns the partial URL for retrieving only board ID and name. Defaults to false.
+ * @return {Array} myBoards Array of parsed JSON object showing details of the user's boards.
  */
 function getMyBoards(simple) {
   simple = simple || false;
@@ -81,7 +85,8 @@ function getMyBoards(simple) {
 
 /**
  * Function to return URL for getMyUserData
- * @return {string} uUrl - unique part of url for this GET call
+ * 
+ * @return {string} uUrl Unique part of url for this GET call
  */
 function getMyUserDataUrl() {
   var uUrl = '/members/me?fields=all';
@@ -92,7 +97,7 @@ function getMyUserDataUrl() {
  * Retrieve details of the current user, as represented by the Trello API key and token
  * https://developers.trello.com/reference#membersid
  * 
- * @return {Object} myUserData - parsed JSON object showing details of the user's boards
+ * @return {Object} myUserData Parsed JSON object showing details of the user's boards.
  */
 function getMyUserData() {
   var extUrl = getMyUserDataUrl() + '&'  + apiKeyToken;
@@ -109,8 +114,9 @@ function getMyUserData() {
 
 /**
  * Function to return URL for getBoard
- * @param {string} boardId - Trello Board ID
- * @return {string} uUrl - unique part of url for this GET call
+ *
+ * @param {string} boardId Trello Board ID
+ * @return {string} uUrl Unique part of url for this GET call.
  */
 function getBoardUrl(boardId){
   var uUrl = '/boards/' + boardId;
@@ -121,8 +127,8 @@ function getBoardUrl(boardId){
  * Retrieve details of a board
  * https://developers.trello.com/reference#boardsboardid-1
  *
- * @param {string} boardId - Trello Board ID
- * @return {Object} board - details of board
+ * @param {string} boardId Trello Board ID
+ * @return {Object} board Details of board
  */
 function getBoard(boardId) {
   var extUrl = getBoardUrl(boardId) + '?'  + apiKeyToken;
@@ -139,8 +145,9 @@ function getBoard(boardId) {
 
 /**
  * Function to return URL for getBoardActions.
- * @param {string} boardId - Board ID of the target Trello board
- * @return {string} uUrl - unique part of url for this GET call
+ *
+ * @param {string} boardId Board ID of the target Trello board
+ * @return {string} uUrl Unique part of url for this GET call
  */
 function getBoardActionsUrl(boardId){
   var uUrl = '/boards/' + boardId + '/actions?limit=1000';
@@ -152,8 +159,8 @@ function getBoardActionsUrl(boardId){
  * Only the most recent 1,000 actions can be retrieved, as limited by the Trello API
  * https://developers.trello.com/reference#boardsboardidactions
  * 
- * @param {string} boardId - Board ID of the target Trello board
- * @return {Object} actions - the most recent 1,000 (upper limit) actions in the targeted board
+ * @param {string} boardId Board ID of the target Trello board
+ * @return {Object} actions The most recent 1,000 (upper limit) actions in the targeted board
  */
 function getBoardActions(boardId){
   var extUrl = getBoardActionsUrl(boardId) + '&' + apiKeyToken;
@@ -170,9 +177,10 @@ function getBoardActions(boardId){
 
 /**
  * Function to return URL for getBoardCards.
- * @param {string} boardId - Board ID of the target Trello board
- * @param {string} option - 'all', 'closed', 'none', 'open', or 'visible'
- * @return {string} uUrl - unique part of url for this GET call
+ *
+ * @param {string} boardId Board ID of the target Trello board
+ * @param {string} option 'all', 'closed', 'none', 'open', or 'visible'
+ * @return {string} uUrl unique part of url for this GET call
  */
 function getBoardCardsUrl(boardId, option){
   var uUrl = '/boards/' + boardId + '/cards/' + option + '?attachments=true';
@@ -183,9 +191,9 @@ function getBoardCardsUrl(boardId, option){
  * Returns an object of all cards in a designated Trello board
  * https://developers.trello.com/reference#boardsboardidtest
  *
- * @param {string} boardId - Board ID of the target Trello board
- * @param {string} option - 'all', 'closed', 'none', 'open', or 'visible'
- * @return {Object} cards - cards in the targeted board
+ * @param {string} boardId Board ID of the target Trello board
+ * @param {string} option 'all', 'closed', 'none', 'open', or 'visible'
+ * @return {Object} cards Cards in the targeted board
  */
 function getBoardCards(boardId, option){
   var extUrl = getBoardCardsUrl(boardId, option) + '&' + apiKeyToken;
@@ -202,8 +210,9 @@ function getBoardCards(boardId, option){
 
 /**
  * Function to return URL for getBoardChecklists.
- * @param {string} boardId - Board ID of the target Trello board
- * @return {string} uUrl - unique part of url for this GET call
+ *
+ * @param {string} boardId Board ID of the target Trello board
+ * @return {string} uUrl Unique part of url for this GET call
  */
 function getBoardChecklistsUrl(boardId){
   var uUrl = '/boards/' + boardId + '/checklists';
@@ -214,8 +223,8 @@ function getBoardChecklistsUrl(boardId){
  * Returns an object of all checklists in a designated Trello board
  * https://developers.trello.com/reference#boardsboardidactions-3
  * 
- * @param {string} boardId - Board ID of the target Trello board
- * @return {Object} checklists - checklists in the targeted board
+ * @param {string} boardId Board ID of the target Trello board
+ * @return {Object} checklists Checklists in the targeted board
  */
 function getBoardChecklists(boardId){
   var extUrl = getBoardChecklistsUrl(boardId) + '?' + apiKeyToken;
@@ -232,8 +241,9 @@ function getBoardChecklists(boardId){
 
 /**
  * Function to return URL for getBoardLists.
- * @param {string} boardId - Board ID of the target Trello board
- * @return {string} uUrl - unique part of url for this GET call
+ *
+ * @param {string} boardId Board ID of the target Trello board
+ * @return {string} uUrl Unique part of url for this GET call
  */
 function getBoardListsUrl(boardId) {
   var uUrl = '/boards/' + boardId + '/lists';
@@ -244,8 +254,8 @@ function getBoardListsUrl(boardId) {
  * Returns an object of all lists in a designated Trello board
  * https://developers.trello.com/reference#boardsboardidlists
  * 
- * @param {string} boardId - Board ID of the target Trello board
- * @return {Object} lists - cards in the targeted board
+ * @param {string} boardId Board ID of the target Trello board.
+ * @return {Array} lists Array of JSON-parsed objects of cards in the targeted board.
  */
 function getBoardLists(boardId) {
   var extUrl = getBoardListsUrl(boardId) + '?' + apiKeyToken;
@@ -264,8 +274,9 @@ function getBoardLists(boardId) {
  * BATCH: Make multiple GET requests to the Trello API using get***Url() functions
  * KNOWN ISSUE: not compatible with URLs that have commas in their query params
  * See official document at https://developers.trello.com/reference#batch for workarounds
- * @param {Array} urls - One-dimensional array of GET request URLs in form of get***Url functions
- * @return {Array} responses - array of objects in line with the order of request URLs in urls
+ *
+ * @param {Array} urls Array of GET request URLs in form of get***Url functions
+ * @return {Array} responses Array of objects in line with the order of request URLs in urls
  */
 function batchGet(urls) {
   var encodedUrls = encodeURIComponent(urls.join());
@@ -287,9 +298,9 @@ function batchGet(urls) {
  * Create Trello card
  * https://developers.trello.com/reference#cardsid-1
  * 
- * @param {Object} queryParams - object in form of {[query params1]=[parameter1],[query params2]=[parameter2], ...}
+ * @param {Object} queryParams Object in form of {[query params1]=[parameter1],[query params2]=[parameter2], ...}
  * See above URL for full details of available query params.
- * @return {Object} createdCard - parsed JSON object with the details of the card created
+ * @return {Object} createdCard Parsed JSON object with the details of the card created
  */
 function postCard(queryParams) {
   var queryKeys = queryParams.keys();
@@ -315,8 +326,8 @@ function postCard(queryParams) {
  * Delete card
  * https://developers.trello.com/reference#delete-card
  * 
- * @param {string} cardId - Trello card ID
- * @return {Object} deleted - result of DELETE
+ * @param {string} cardId Trello card ID
+ * @return {Object} deleted Result of DELETE
  */
 function deleteCard(cardId) {
   var url = baseUrl + '/cards/' + cardId + '?'  + apiKeyToken;
@@ -334,8 +345,8 @@ function deleteCard(cardId) {
 
 /**
  * Standarized error message for this script
- * @param {Object} e - error object returned by try-catch
- * @return {string} message - standarized error message
+ * @param {Object} e Error object returned by try-catch
+ * @return {string} message Standarized error message
  */
 function errorMessage(e) {
   var message = 'Error : line - ' + e.lineNumber + '\n[' + e.name + '] ' + e.message + '\n' + e.stack;
