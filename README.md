@@ -24,7 +24,7 @@ Google App Scripts to manage Trello using its API and Google Spreadsheet.
     - trelloToken: API token for Trello
     - boardId: Trello Board Id that you want to manage using the script   
 If you're not sure where to find the API keys and tokens for Trello, see [API Key Security](https://developers.trello.com/docs/api-key-security) at the Trello Developers documentation.
-1. Enable TrelloScript Library by entering its project key `M44otJ56pF074bNKTJJ7ktI0YdntMo1yT` on *Resources* -> *Library* -> *Add a Library*. The default identifier `TrelloScript` is used in scripts of **code.gs**.
+1. Enable TrelloScript Library by entering its script ID `1w2bHQ52dRMv1CG1XR7sW-B4P-A1B6ilaI5n8qNpUFjtJ3RIzla4sAa-Y` on *Resources* -> *Library* -> *Add a Library*. The default identifier `TrelloScript` is used in scripts of **code.gs**.
 1. Refresh the Google Spreadsheet; you'll see that a menu *Trello* is added to your menu
 1. You'll be asked for [authentications, as mentioned above,](https://github.com/ttsukagoshi/Trello_Scripts#scope-of-authentications-oauth-required-for-this-script) when executing the script for the first time.
 
@@ -65,7 +65,7 @@ GASとGoogleスプレッドシートを使ってTrelloを管理する。
     - trelloToken: TrelloのAPIトークン
     - boardId: このスクリプトで管理したいTrelloボードのID  
 TrelloのAPI keyやトークンについての説明は公式ドキュメントの[API Key Security](https://developers.trello.com/docs/api-key-security)参照。
-1. *リソース* -> *ライブラリ* -> *Add a Library*に、プロジェクトキー`M44otJ56pF074bNKTJJ7ktI0YdntMo1yT`を入力することで、ライブラリ*Trello Script*を有効にする。最新バージョンを選択。Identifier `TrelloScript` は初期値のままでok。変更するならば、**code.gs**内の記述変更を忘れずに。
+1. *リソース* -> *ライブラリ* -> *Add a Library*に、スクリプトID`1w2bHQ52dRMv1CG1XR7sW-B4P-A1B6ilaI5n8qNpUFjtJ3RIzla4sAa-Y`を入力することで、ライブラリ*Trello Script*を有効にする。最新バージョンを選択。Identifier `TrelloScript` は初期値のままでok。変更するならば、**code.gs**内の記述変更を忘れずに。
 1. コードを保存の上、スプレッドシートを更新。メニュー「*Trello*」が追加されていることを確認すれば準備完了。
 1. スクリプトの初回実行時には、「認証のスコープ」にあるとおりの許可を行う必要がある。
 
