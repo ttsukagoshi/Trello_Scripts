@@ -242,7 +242,7 @@ function getBoardChecklists(boardId){
 /**
  * Function to return URL for getBoardLists.
  *
- * @param {string} boardId Board ID of the target Trello board
+ * @param {string} boardId Board ID of the target Trello board.
  * @return {string} uUrl Unique part of url for this GET call
  */
 function getBoardListsUrl(boardId) {
@@ -264,6 +264,37 @@ function getBoardLists(boardId) {
     var lists = get(url);
     lists = JSON.parse(lists);
     return lists;
+  } catch(e) {
+    var error = errorMessage(e);
+    return error;
+  }
+}
+
+/**
+ * Function to return URL for getListCards().
+ *
+ * @param {string} listId List ID of the target Trello list.
+ * @return {string} uUrl Unique part of url for this GET call
+ */
+function getListCardsUrl(listId) {
+  var uUrl = '/lists/' + listId + '/cards';
+  return uUrl;
+}
+
+/**
+ * Returns an object of all cards in a designated Trello list
+ * https://developers.trello.com/reference#listsidcards
+ * 
+ * @param {string} listId List ID of the target Trello list.
+ * @return {Array} lists Array of JSON-parsed objects of cards in the targeted list.
+ */
+function getListCards(listId) {
+  var extUrl = getListCardsUrl(listId) + '?' + apiKeyToken;
+  var url = baseUrl + extUrl;
+  try {
+    var cards = get(url);
+    cards = JSON.parse(cards);
+    return cards;
   } catch(e) {
     var error = errorMessage(e);
     return error;
@@ -321,6 +352,18 @@ function postCard(queryParams) {
     return error;
   }
 }
+
+/**
+ * POST request to archive all cards in a list.
+ * https://developers.trello.com/reference#listsidarchiveallcards
+ *
+ * @param {string} listId List ID
+ */
+function listArchiveAllCards(listId) {
+  var url = baseUrl + '/lists/' + listId + '/archiveAllCards?' + apiKeyToken;
+  post(url);
+}
+
 
 /**
  * Delete card
