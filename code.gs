@@ -14,12 +14,12 @@ var pBoardId = scriptProperties.getProperty('targetBoardId');
 var userLocale = Session.getActiveUserLocale();
 var ss = SpreadsheetApp.getActiveSpreadsheet();
 var timeZone = ss.getSpreadsheetTimeZone();
-var ui = SpreadsheetApp.getUi();
 
 /*************************************************************************/
 // Spreadsheet Menu
 /*************************************************************************/
 function onOpen(e) {
+  var ui = SpreadsheetApp.getUi();
   ui.createMenu('Trello')
   .addSubMenu(ui.createMenu('Report')
               .addItem('Board Content', 'trelloReport')
@@ -160,7 +160,7 @@ function setTargetBoardId() {
   var ui = SpreadsheetApp.getUi();
   var value = SpreadsheetApp.getActiveRange().getValue();
   
-  if (value == null || typeof value !== 'string') {
+  if (value == null || value == '' || typeof value !== 'string') {
     ui.alert('Select a proper value.');
   } else {
     var property = {
